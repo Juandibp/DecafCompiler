@@ -1,169 +1,159 @@
-%{
-
-#define YY_DECL extern "C" int yylex()
-
-extern union node yylval;
-int lineno = 0;
-
-char * translateString(char *, int);
-%}
-
 %option noyywrap
+%option yylineno
+%{
+	
+	#include "parser.tab.h"
+	#include <string.h>
+	#include <stdlib.h>
+	int lineno = 0;
+	char * translateString(char *, int);
+%}
 
 
 CHAR (\.|[^\"])
 
+espacio [ \r\t\v\f]
+saltoLinea \n
+
 
 %%
-
-  /* Binary operators  */
-\+                              {
-                                  //printf("plus\n");
-                                  return (PLUS);
+	/* Operadores  */
+"+"                              {
+                                  return (plus);
                                 }
-\-                              {
-                                  //printf("minus\n");
-                                  return (MINUS);
+"-"                              {
+                                  return (minus);
                                 }
-\*                              {
-                                  //printf("mult\n");
-                                  return (MULT);
+"*"                              {
+                                  return (mult);
                                 }
-\/                              {
-                                  //printf("div\n");
-                                  return (DIV);
+"/"                            {
+                                  return (token_div);
                                 }
-\%                              {
-                                  //printf("mod\n");
-                                  return (MOD);
+"%"                              {
+                                  return (mod);
                                 }
 
-\=                              {
-                                  //printf("eql\n");
-                                  return (EQL);
+"<"                              {
+                                  return (menor);
                                 }
-\-\=                            {
-                                  //printf("meql\n");
-                                  return (MEQL);
+"<="                              {
+                                  return (menorEql);
                                 }
-\+\=                            {
-                                  //printf("peql\n");
-                                  return (PEQL);
+">"                              {
+                                  return (mayor);
                                 }
-
+">="                              {
+                                  return (mayorEql);
+                                }
+"="                              {
+                                  return (eql);
+                                }								
+"=="                              {
+                                  return (eqlEql);
+                                }
+"!="                              {
+                                  return (nEql);
+                                }
+								
+								
  /* conditional operators  */
-\&\&                            {
+"&&"                            {
                                   //printf("and\n");
-                                  return (AND);
+                                  return (token_and);
                                 }
-\|\|                            {
+"||"                            {
                                   //printf("or\n");
-                                  return (OR);
+                                  return (token_or);
+                                }
+								
+ /*Parentesis*/
+ 
+"("                              {printf("Lex: (\n");
+                                  return (opar);
+                                }
+")"                              {printf("Lex: )\n");
+                                  return (cpar);
+                                }
+"{"                              {printf("Lex: {\n");
+                                  return (ocur);
+                                }
+"}"                              {printf("Lex: }\n");
+                                  return (ccur);
+                                }								
+"["                              {
+                                  return (osqu);
+                                }
+"]"                              {
+                                  return (csqu);
                                 }
 
-\=\=                            {
-                                  //printf("eql_eql\n");
-                                  return (EQLEQL);
-                                }
-\!\=                            {
-                                  //printf("neql\n");
-                                  return (NEQL);
-                                }
+ /*Palabras Reservadas*/
+void							{printf("Lex: void\n");return (token_void); }
 
-\<                              {
-                                  //printf("lt\n");
-                                  return (LT);
-                                }
-\>                              {
-                                  //printf("gt\n");
-                                  return (GT);
-                                }
-\<\=                            {
-                                  //printf("leq\n");
-                                  return (LEQ);
-                                }
-\>\=                            {
-                                  //printf("geq\n");
-                                  return (GEQ);
-                                }
+int								{return (Type_int); }
 
+double							{return (Type_double); }
 
- /* brackets  */
-\{                              {
-                                  //printf("ocur\n");
-                                  return (OCUR);
-                                }
-\}                              {
-                                  //printf("ccur\n");
-                                  return (CCUR);
-                                }
-\(                              {
-                                  //printf("opar\n");
-                                  return (OPAR);
-                                }
-\)                              { //printf("cpar\n");
-                                    return (CPAR); }
-"["                             { //printf("osqu\n");
-                                    return (OSQU); }
-\]                              { //printf("csqu\n");
-                                    return (CSQU); }
+bool							{return (Type_bool); }
 
-  /* comment */
-\/\/.*				;
+string                          {return (Type_string); }
+
+class                         	{printf("Lex: class\n");return (token_class); }
+
+interface                       {return (token_interface); }
+
+null                         	{return (null); }
+
+this                         	{return (token_this); }
+
+extends                         {return (token_extends); }		
+
+implements                         	{return (token_implements); }	
+
+for                         	{return (token_for); }	
+
+while                         	{return (token_while); }
+
+if                         		{return (token_if); }		
+
+else                         		{return (token_else); }	
+
+return                         		{return (token_return); }	
+
+break                         		{return (token_break); }	
+
+New                         		{return (token_new); }	
+
+NewArray						{return (token_newArray); }	
+
+Print							{printf("Lex: print\n");return (print); }	
+
+ReadInteger							{return (readInteger); }
+
+ReadLine							{return (readLine); }
+
+true                            { return (boolConstant); }
+false                           { return (boolConstant); }
 
 
-  /* Data Type */
-int                             { //printf("INT\n");
-                                    return (INT); }
-boolean                         { //printf("Boolean\n");
-                                    return (BOOLEAN); }
-void                            { //printf("Void\n");
-                                    return (VOID); }
+	/* Numbers, Strings and Others */
+	
 
-
- /* Keywords */
-class                           { //printf("class\n");
-                                    return (CLASS); }
-if                              { //printf("if\n");
-                                    return (IF); }
-else                            { //printf("else\n");
-                                    return (ELSE); }
-for                             { //printf("for\n");
-                                    return (FOR); }
-break                           { //printf("break\n");
-                                    return (BREAK); }
-continue                        { //printf("continue\n");
-                                    return (CONTINUE); }
-return                          { //printf("return\n");
-                                    return (RETURN); }
-callout                         { //printf("callout\n");
-                                    return (CALLOUT); }
-true                            { //printf("true\n");
-                                    return (TRUE); }
-false                           { //printf("false\n");
-                                    return (FALSE); }
-
-
- /* Numbers, Strings and Others */
 0x[0-9a-fA-F][0-9a-fA-F]*       { //printf("hex\n");
-                                    return (INT_VAL); }
+                                    return (intConstant); }
 [0-9]+                          { //printf("decimal\n");
-                                    yylval.ival = atoi(yytext); return (INT_VAL); }
-\"{CHAR}*\"                     { //printf("string\n");
-                                  yylval.sval = translateString(yytext + 1, strlen(yytext) - 2); return (STR);}
-\'{CHAR}?\'                     { //printf("char\n");
-                                  yylval.cval = yytext[1]; return (CHAR); }
-[a-zA-Z_][a-zA-Z0-9_]*          { //printf("id\n");
-                                  yylval.sval = strdup(yytext); return (ID); }
-
+                                    yylval.ival = atoi(yytext); return (intConstant); }
+\"{CHAR}*\"                     { printf("string\n");
+                                  yylval.sval = translateString(yytext + 1, strlen(yytext) - 2); return (stringConstant);}
+[a-zA-Z_][a-zA-Z0-9_]*          {  printf("Lex: ident\n");
+								   yylval.sval = strdup(yytext);
+								  return (ident); }
 
   /* Special Characters */
-!                               { //printf("excla\n");
-                                    return (NOT); }
-;                               { //printf("scolon\n");
-                                    return (SCOLON); }
-,                               { //printf("comma\n");
-                                    return (COMMA); }
+!                               { return (token_not); }
+;                               {printf("Lex: ;\n");   return (scolon); }
+,                               {  return (comma); }
 \t
 \n                              {lineno++;}
 " "
@@ -175,7 +165,11 @@ false                           { //printf("false\n");
 
 
 
+
+					
+	
 %%
+
 char * translateString(char * string, int size) {
     char * ch = string;
     char * newString = (char *) malloc(size + 1);
