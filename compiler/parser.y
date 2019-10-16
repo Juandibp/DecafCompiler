@@ -8,10 +8,12 @@
 
 %}
 
+
 %union {
   int ival;
   double dval;
   char *sval ;
+  
 }
 
 
@@ -34,7 +36,7 @@
 %start Program
 
 %%
-Program : Decl Multi_Decl 
+Program : Decl Multi_Decl
 
 Multi_Decl: Decl Multi_Decl | 
 
@@ -82,8 +84,10 @@ MultiBinary_VariableDecl : VariableDecl MultiBinary_VariableDecl |
 MultiBinary_Stmt : Stmt MultiBinary_Stmt |
 
 
-Stmt :  ExprBinaria  scolon | IfStmt | WhileStmt | ForStmt | BreakStmt |
+Stmt :  MultiBinary_Expr   | IfStmt | WhileStmt | ForStmt | BreakStmt |
 		ReturnStmt | PrintStmt | StmtBlock
+
+MultiBinary_Expr: Expr scolon MultiBinary_Expr	|
 
 ExprBinaria : Expr | 
 
@@ -122,10 +126,11 @@ Actuals : Expresion |
 
 Constant : intConstant | doubleConstant | boolConstant |
 			 stringConstant | null
+
 %%
 
 void yyerror(char const *x){
 
-	printf("Error %s  \n",x);
+	printf("Error %s %d\n",x,yylex());
 	exit(1);
 }

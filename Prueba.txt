@@ -1,8 +1,5 @@
-class Hello {
- void main() {
- Print("Hello world\n");
- }
-}
+void main(){
 
+}dkoslkdsd
 
 

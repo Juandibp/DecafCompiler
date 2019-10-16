@@ -8,7 +8,9 @@
 
 	int lineno = 1;
 	char * translateString(char *, int);
-  void printScannerTable(int,const char*,const char*);
+  void printScannerTable(int,int,const char*,const char*);
+  int column = 0;
+   
 %}
 
 
@@ -19,166 +21,170 @@ saltoLinea \n
 
 
 %%
+
+  /* Comentarios */
+\/\/(.*)"\n"
+"/*"([^*]|\*+[^*/])*\*+"/"
+
 	/* Operadores  */
-"+"                              {
-                                  printScannerTable(lineno,"plus","+");
+"+"                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"plus","+");
                                   return (plus);
                                 }
-"-"                              {
-                                  printScannerTable(lineno,"minus","-");
+"-"                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"minus","-");
                                   return (minus);
                                 }
-"*"                              {
-                                  printScannerTable(lineno,"mult","*");
+"*"                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"mult","*");
                                   return (mult);
                                 }
-"/"                            {
-                                  printScannerTable(lineno,"token_div","/");
+"/"                            {column = column + yyleng;
+                                  printScannerTable(lineno,column,"token_div","/");
                                   return (token_div);
                                 }
-"%"                              {
-                                  printScannerTable(lineno,"mod","%");
+"%"                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"mod","%");
                                   return (mod);
                                 }
 
-"<"                              {
-                                  printScannerTable(lineno,"menor","<");
+"<"                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"menor","<");
                                   return (menor);
                                 }
-"<="                              {
-                                  printScannerTable(lineno,"menorEql","<=");
+"<="                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"menorEql","<=");
                                   return (menorEql);
                                 }
-">"                              {
-                                  printScannerTable(lineno,"mayor",">");
+">"                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"mayor",">");
                                   return (mayor);
                                 }
-">="                              {
-                                  printScannerTable(lineno,"mayorEql",">=");
+">="                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"mayorEql",">=");
                                   return (mayorEql);
                                 }
-"="                              {
-                                  printScannerTable(lineno,"eql","=");
+"="                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"eql","=");
                                   return (eql);
                                 }								
-"=="                              {
-                                  printScannerTable(lineno,"eqlEql","==");
+"=="                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"eqlEql","==");
                                   return (eqlEql);
                                 }
-"!="                              {
-                                  printScannerTable(lineno,"nEql","!=");
+"!="                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"nEql","!=");
                                   return (nEql);
                                 }
 								
-								
- /* conditional operators  */
-"&&"                            {
-                                  printScannerTable(lineno,"token_and","&&");
+						
+"&&"                            {column = column + yyleng;
+                                  printScannerTable(lineno,column,"token_and","&&");
                                   return (token_and);
                                 }
-"||"                            {
-                                  printScannerTable(lineno,"token_or","||");
+"||"                            {column = column + yyleng;
+                                  printScannerTable(lineno,column,"token_or","||");
                                   return (token_or);
                                 }
 								
  /*Parentesis*/
  
-"("                              {printScannerTable(lineno,"opar","(");
+"("                              {column = column + yyleng;printScannerTable(lineno,column,"opar","(");
                                   return (opar);
                                 }
-")"                              {printScannerTable(lineno,"cpar",")");
+")"                              {column = column + yyleng;printScannerTable(lineno,column,"cpar",")");
                                   return (cpar);
                                 }
-"{"                              {printScannerTable(lineno,"ocur","{");
+"{"                              {column = column + yyleng;printScannerTable(lineno,column,"ocur","{");
                                   return (ocur);
                                 }
-"}"                              {printScannerTable(lineno,"ccur","}");
+"}"                              {column = column + yyleng;printScannerTable(lineno,column,"ccur","}");
                                   return (ccur);
                                 }								
-"["                              {
-                                  printScannerTable(lineno,"osqu","[");
+"["                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"osqu","[");
                                   return (osqu);
                                 }
-"]"                              {
-                                  printScannerTable(lineno,"csqu","]");
+"]"                              {column = column + yyleng;
+                                  printScannerTable(lineno,column,"csqu","]");
                                   return (csqu);
                                 }
 
  /*Palabras Reservadas*/
-void							{printScannerTable(lineno,"void","");return (token_void); }
+void							{column = column + yyleng;printScannerTable(lineno,column,"void","");return (token_void); }
 
-int								{printScannerTable(lineno,"Type_int","");return (Type_int); }
+int								{column = column + yyleng;printScannerTable(lineno,column,"Type_int","");return (Type_int); }
 
-double							{printScannerTable(lineno,"Type_double",""); return (Type_double); }
+double							{column = column + yyleng;printScannerTable(lineno,column,"Type_double",""); return (Type_double); }
 
-bool							{printScannerTable(lineno,"Type_bool",""); return (Type_bool); }
+bool							{column = column + yyleng;printScannerTable(lineno,column,"Type_bool",""); return (Type_bool); }
 
-string                          {printScannerTable(lineno,"Type_string",""); return (Type_string); }
+string                          {column = column + yyleng;printScannerTable(lineno,column,"Type_string",""); return (Type_string); }
 
-class                         	{printScannerTable(lineno,"token_class",""); return (token_class); }
+class                         	{column = column + yyleng;printScannerTable(lineno,column,"token_class",""); return (token_class); }
 
-interface                       {printScannerTable(lineno,"token_interface",""); return (token_interface); }
+interface                       {column = column + yyleng;printScannerTable(lineno,column,"token_interface",""); return (token_interface); }
 
-null                         	{printScannerTable(lineno,"null",""); return (null); }
+null                         	{column = column + yyleng;printScannerTable(lineno,column,"null",""); return (null); }
 
-this                         	{printScannerTable(lineno,"token_this",""); return (token_this); }
+this                         	{column = column + yyleng;printScannerTable(lineno,column,"token_this",""); return (token_this); }
 
-extends                         {printScannerTable(lineno,"token_extends",""); return (token_extends); }		
+extends                         {column = column + yyleng;printScannerTable(lineno,column,"token_extends",""); return (token_extends); }		
 
-implements                         	{printScannerTable(lineno,"token_implements",""); return (token_implements); }	
+implements                         	{column = column + yyleng;printScannerTable(lineno,column,"token_implements",""); return (token_implements); }	
 
-for                         	{printScannerTable(lineno,"token_for",""); return (token_for); }	
+for                         	{column = column + yyleng;printScannerTable(lineno,column,"token_for",""); return (token_for); }	
 
-while                         	{printScannerTable(lineno,"token_while",""); return (token_while); }
+while                         	{column = column + yyleng;printScannerTable(lineno,column,"token_while",""); return (token_while); }
 
-if                         		{printScannerTable(lineno,"token_if",""); return (token_if); }		
+if                         		{column = column + yyleng;printScannerTable(lineno,column,"token_if",""); return (token_if); }		
 
-else                         		{printScannerTable(lineno,"token_else",""); return (token_else); }	
+else                         		{column = column + yyleng;printScannerTable(lineno,column,"token_else",""); return (token_else); }	
 
-return                         		{printScannerTable(lineno,"token_return",""); return (token_return); }	
+return                         		{column = column + yyleng;printScannerTable(lineno,column,"token_return",""); return (token_return); }	
 
-break                         		{printScannerTable(lineno,"token_break",""); return (token_break); }	
+break                         		{column = column + yyleng;printScannerTable(lineno,column,"token_break",""); return (token_break); }	
 
-New                         		{printScannerTable(lineno,"token_new",""); return (token_new); }	
+New                         		{column = column + yyleng;printScannerTable(lineno,column,"token_new",""); return (token_new); }	
 
-NewArray						{printScannerTable(lineno,"token_newArray",""); return (token_newArray); }	
+NewArray						{column = column + yyleng;printScannerTable(lineno,column,"token_newArray",""); return (token_newArray); }	
 
-Print							{printScannerTable(lineno,"print","");return (print); }	
+Print							{column = column + yyleng;printScannerTable(lineno,column,"print","");return (print); }	
 
-ReadInteger							{printScannerTable(lineno,"readInteger",""); return (readInteger); }
+ReadInteger							{column = column + yyleng;printScannerTable(lineno,column,"readInteger",""); return (readInteger); }
 
-ReadLine							{printScannerTable(lineno,"readLine",""); return (readLine); }
+ReadLine							{column = column + yyleng;printScannerTable(lineno,column,"readLine",""); return (readLine); }
 
-true                            {printScannerTable(lineno,"boolConstant","true");  return (boolConstant); }
-false                           {printScannerTable(lineno,"boolConstant","false");  return (boolConstant); }
+true                            {column = column + yyleng;printScannerTable(lineno,column,"boolConstant","true");  return (boolConstant); }
+false                           {column = column + yyleng;printScannerTable(lineno,column,"boolConstant","false");  return (boolConstant); }
 
 
-	/* Numbers, Strings and Others */
+	/* Variables */
 	
 
-0x[0-9a-fA-F][0-9a-fA-F]*       { 
-                                    printScannerTable(lineno,"hex",yytext);
+0x[0-9a-fA-F][0-9a-fA-F]*       { column = column + yyleng;
+                                    printScannerTable(lineno,column,"hex",yytext);
 
                                     return (intConstant); }
-[0-9]+                          { printScannerTable(lineno,"decimal",yytext);
+[0-9]+                          { column = column + yyleng;printScannerTable(lineno,column,"decimal",yytext);
                                     yylval.ival = atoi(yytext); return (intConstant); }
-\"{CHAR}*\"                     { printScannerTable(lineno,"string",yytext);
+\"{CHAR}*\"                     {column = column + yyleng; printScannerTable(lineno,column,"string",yytext);
                                   yylval.sval = translateString(yytext + 1, strlen(yytext) - 2); return (stringConstant);}
-[a-zA-Z_][a-zA-Z0-9_]*          {  printScannerTable(lineno,"id\t",yytext);
+[a-zA-Z_][a-zA-Z0-9_]*          {  column = column + yyleng;printScannerTable(lineno,column,"id\t",yytext);
 								   yylval.sval = strdup(yytext);
 								  return (ident); }
 
-  /* Special Characters */
-!                               {printScannerTable(lineno,"token_not","!"); return (token_not); }
-;                               {printScannerTable(lineno,"scolon",";");   return (scolon); }
-,                               {printScannerTable(lineno,"comma",",");  return (comma); }
+  /* Caracteres especiales */
+!                               {column = column + yyleng;printScannerTable(lineno,column,"token_not","!"); return (token_not); }
+;                               {column = column + yyleng;printScannerTable(lineno,column,"scolon",";");   return (scolon); }
+,                               {column = column + yyleng;printScannerTable(lineno,column,"comma",",");  return (comma); }
 \t
-\n                              {lineno++;}
+\n                              {lineno++; column = 0;}
 " "
-.				                {printf("Error here\n");}
+\"{CHAR}* 						{printf("Error in line %d and column %d unclose string",lineno,column);exit(1);}
+.				                {printf("Caracter ilegal <%s> en línea %d y columna %d\n",yytext,lineno,column);exit(1);}
 
-  /* Comment Line */
-\/\/(.*)"\n"
+
 
 
 
@@ -240,10 +246,10 @@ char * translateString(char * string, int size) {
                     case '5':
                     case '6':
                     case '7':
-                        // TODO: Fill
+                        
                         break;
                     case 'x':
-                        // TODO: Fill
+                        
                         break;
                     default:
                         break;
@@ -260,6 +266,6 @@ char * translateString(char * string, int size) {
     return newString;
 }
 
-void printScannerTable(int line,const char* tkn, const char* value){
-  printf("Line: %d   Token: %s \t Value: %s\n", line,tkn,value);
+void printScannerTable(int line,int column,const char* tkn, const char* value){
+  printf("Line: %d    Column: %d    Token: %s \t Value: %s\n", line,column,tkn,value);
 }

@@ -1,6 +1,29 @@
 #include <iostream>
 
 extern int yyparse();
+/*
+ * Declarations for a calculator fb3-1
+ */
+/* interface to the lexer */
+extern int yylineno; /* from lexer */
+void yyerror(char *s, ...);
+/* nodes in the abstract syntax tree */
+struct ast {
+ int nodetype;
+ struct ast *l;
+ struct ast *r;
+};
+struct numval {
+ int nodetype; /* type K for constant */
+ double number;
+};
+/* build an AST */
+struct ast *newast(int nodetype, struct ast *l, struct ast *r);
+struct ast *newnum(double d);
+/* evaluate an AST */
+double eval(struct ast *);
+/* delete and free an AST */
+void treefree(struct ast *);
 
 
 
@@ -8,9 +31,9 @@ extern int yyparse();
 int main(){
 	int result = yyparse();
 	if(result == 0)
-		std::cout << "Entro con ganas"<< std::endl;
+		std::cout << "Exito"<< std::endl;
 	else
-		std::cout << "No entro"<< std::endl;
+		std::cout << "Error"<< std::endl;
 	return result;
 
 }
