@@ -5,6 +5,7 @@
 	#include "parser.tab.h"
 	#include <string.h>
 	#include <stdlib.h>
+  #define YY_USER_ACTION yyset_column(yyget_column(yyscanner) + yyget_leng(yyscanner), yyscanner);
 	int lineno = 0;
 	char * translateString(char *, int);
 %}
@@ -19,141 +20,157 @@ saltoLinea \n
 %%
 	/* Operadores  */
 "+"                              {
+                                  printScannerTable("plus",yyget_column(yyscanner),"+");
                                   return (plus);
                                 }
 "-"                              {
+                                  printScannerTable("minus",yyget_column(yyscanner),"-");
                                   return (minus);
                                 }
 "*"                              {
+                                  printScannerTable("mult",yyget_column(yyscanner),"*");
                                   return (mult);
                                 }
 "/"                            {
+                                  printScannerTable("token_div",yyget_column(yyscanner),"/");
                                   return (token_div);
                                 }
 "%"                              {
+                                  printScannerTable("mod",yyget_column(yyscanner),"%");
                                   return (mod);
                                 }
 
 "<"                              {
+                                  printScannerTable("menor",yyget_column(yyscanner),"<");
                                   return (menor);
                                 }
 "<="                              {
+                                  printScannerTable("menorEql",yyget_column(yyscanner),"<=");
                                   return (menorEql);
                                 }
 ">"                              {
+                                  printScannerTable("mayor",yyget_column(yyscanner),">");
                                   return (mayor);
                                 }
 ">="                              {
+                                  printScannerTable("mayorEql",yyget_column(yyscanner),">=");
                                   return (mayorEql);
                                 }
 "="                              {
+                                  printScannerTable("eql",yyget_column(yyscanner),"=");
                                   return (eql);
                                 }								
 "=="                              {
+                                  printScannerTable("eqlEql",yyget_column(yyscanner),"==");
                                   return (eqlEql);
                                 }
 "!="                              {
+                                  printScannerTable("nEql",yyget_column(yyscanner),"!=");
                                   return (nEql);
                                 }
 								
 								
  /* conditional operators  */
 "&&"                            {
-                                  //printf("and\n");
+                                  printScannerTable("token_and",yyget_column(yyscanner),"&&");
                                   return (token_and);
                                 }
 "||"                            {
-                                  //printf("or\n");
+                                  printScannerTable("token_or",yyget_column(yyscanner),"||");
                                   return (token_or);
                                 }
 								
  /*Parentesis*/
  
-"("                              {printf("Lex: (\n");
+"("                              {printScannerTable("opar",yyget_column(yyscanner),"(");
                                   return (opar);
                                 }
-")"                              {printf("Lex: )\n");
+")"                              {printScannerTable("cpar",yyget_column(yyscanner),")");
                                   return (cpar);
                                 }
-"{"                              {printf("Lex: {\n");
+"{"                              {printScannerTable("ocur",yyget_column(yyscanner),"{");
                                   return (ocur);
                                 }
-"}"                              {printf("Lex: }\n");
+"}"                              {printScannerTable("ccur",yyget_column(yyscanner),"}");
                                   return (ccur);
                                 }								
 "["                              {
+                                  printScannerTable("osqu",yyget_column(yyscanner),"[");
                                   return (osqu);
                                 }
 "]"                              {
+                                  printScannerTable("csqu",yyget_column(yyscanner),"]");
                                   return (csqu);
                                 }
 
  /*Palabras Reservadas*/
-void							{printf("Lex: void\n");return (token_void); }
+void							{printScannerTable("void",yyget_column(yyscanner),"");return (token_void); }
 
-int								{return (Type_int); }
+int								{printScannerTable("Type_int",yyget_column(yyscanner),"");return (Type_int); }
 
-double							{return (Type_double); }
+double							{printScannerTable("Type_double",yyget_column(yyscanner),""); return (Type_double); }
 
-bool							{return (Type_bool); }
+bool							{printScannerTable("Type_bool",yyget_column(yyscanner),""); return (Type_bool); }
 
-string                          {return (Type_string); }
+string                          {printScannerTable("Type_string",yyget_column(yyscanner),""); return (Type_string); }
 
-class                         	{printf("Lex: class\n");return (token_class); }
+class                         	{printScannerTable("token_class",yyget_column(yyscanner),""); return (token_class); }
 
-interface                       {return (token_interface); }
+interface                       {printScannerTable("token_interface",yyget_column(yyscanner),""); return (token_interface); }
 
-null                         	{return (null); }
+null                         	{printScannerTable("null",yyget_column(yyscanner),""); return (null); }
 
-this                         	{return (token_this); }
+this                         	{printScannerTable("token_this",yyget_column(yyscanner),""); return (token_this); }
 
-extends                         {return (token_extends); }		
+extends                         {printScannerTable("token_extends",yyget_column(yyscanner),""); return (token_extends); }		
 
-implements                         	{return (token_implements); }	
+implements                         	{printScannerTable("token_implements",yyget_column(yyscanner),""); return (token_implements); }	
 
-for                         	{return (token_for); }	
+for                         	{printScannerTable("token_for",yyget_column(yyscanner),""); return (token_for); }	
 
-while                         	{return (token_while); }
+while                         	{printScannerTable("token_while",yyget_column(yyscanner),""); return (token_while); }
 
-if                         		{return (token_if); }		
+if                         		{printScannerTable("token_if",yyget_column(yyscanner),""); return (token_if); }		
 
-else                         		{return (token_else); }	
+else                         		{printScannerTable("token_else",yyget_column(yyscanner),""); return (token_else); }	
 
-return                         		{return (token_return); }	
+return                         		{printScannerTable("token_return",yyget_column(yyscanner),""); return (token_return); }	
 
-break                         		{return (token_break); }	
+break                         		{printScannerTable("token_break",yyget_column(yyscanner),""); return (token_break); }	
 
-New                         		{return (token_new); }	
+New                         		{printScannerTable("token_new",yyget_column(yyscanner),""); return (token_new); }	
 
-NewArray						{return (token_newArray); }	
+NewArray						{printScannerTable("token_newArray",yyget_column(yyscanner),""); return (token_newArray); }	
 
-Print							{printf("Lex: print\n");return (print); }	
+Print							{printScannerTable("print",yyget_column(yyscanner),"");return (print); }	
 
-ReadInteger							{return (readInteger); }
+ReadInteger							{printScannerTable("readInteger",yyget_column(yyscanner),""); return (readInteger); }
 
-ReadLine							{return (readLine); }
+ReadLine							{printScannerTable("readLine",yyget_column(yyscanner),""); return (readLine); }
 
-true                            { return (boolConstant); }
-false                           { return (boolConstant); }
+true                            {printScannerTable("boolConstant",yyget_column(yyscanner),"true");  return (boolConstant); }
+false                           {printScannerTable("boolConstant",yyget_column(yyscanner),"false");  return (boolConstant); }
 
 
 	/* Numbers, Strings and Others */
 	
 
-0x[0-9a-fA-F][0-9a-fA-F]*       { //printf("hex\n");
+0x[0-9a-fA-F][0-9a-fA-F]*       { 
+                                    printScannerTable("hex",yyget_column(yyscanner),yytext);
+
                                     return (intConstant); }
-[0-9]+                          { //printf("decimal\n");
+[0-9]+                          { printScannerTable("decimal",yyget_column(yyscanner),yytext);
                                     yylval.ival = atoi(yytext); return (intConstant); }
-\"{CHAR}*\"                     { printf("string\n");
+\"{CHAR}*\"                     { printScannerTable("string",yyget_column(yyscanner),yytext);
                                   yylval.sval = translateString(yytext + 1, strlen(yytext) - 2); return (stringConstant);}
-[a-zA-Z_][a-zA-Z0-9_]*          {  printf("Lex: ident\n");
+[a-zA-Z_][a-zA-Z0-9_]*          {  printScannerTable("id",yyget_column(yyscanner),yytext);
 								   yylval.sval = strdup(yytext);
 								  return (ident); }
 
   /* Special Characters */
-!                               { return (token_not); }
-;                               {printf("Lex: ;\n");   return (scolon); }
-,                               {  return (comma); }
+!                               {printScannerTable("token_not",yyget_column(yyscanner),"!"); return (token_not); }
+;                               {printScannerTable("scolon",yyget_column(yyscanner),";");   return (scolon); }
+,                               {printScannerTable("comma",yyget_column(yyscanner),",");  return (comma); }
 \t
 \n                              {lineno++;}
 " "
@@ -240,4 +257,9 @@ char * translateString(char * string, int size) {
     }
     *temp = '\0';
     return newString;
+}
+
+int printScannerTable(string tkn,int colno, string value){
+  printf("Line: %s \t, Column: %d \t, Token: %s \t Value: %s\n", lineno,colno,tkn,value);
+  return 0;
 }
