@@ -8,6 +8,7 @@
   #define YY_USER_ACTION yyset_column(yyget_column(yyscanner) + yyget_leng(yyscanner), yyscanner);
 	int lineno = 0;
 	char * translateString(char *, int);
+  int printScannerTable(string,int,string);
 %}
 
 
