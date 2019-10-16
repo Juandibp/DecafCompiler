@@ -34,7 +34,7 @@
 %start Program
 
 %%
-Program : Multi_Decl
+Program : Decl Multi_Decl 
 
 Multi_Decl: Decl Multi_Decl | 
 
@@ -61,7 +61,7 @@ MultiBinary_Field : Field MultiBinary_Field |
 
 Extends: token_extends ident | 
 
-Implements: token_implements Identificador
+Implements: token_implements Identificador |
 
 Identificador : ident  Multi_Identificador
 
