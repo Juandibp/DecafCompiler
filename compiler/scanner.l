@@ -161,6 +161,15 @@ false                           {column = column + yyleng;printScannerTable(line
 
 	/* Variables */
 	
+[0-9]+"."[0-9]*					 { column = column + yyleng;
+                                    printScannerTable(lineno,column,"double",yytext);
+
+                                    return (doubleConstant); }
+									
+[0-9]+"."[E|e][+|-][0-9]+			{ column = column + yyleng;
+                                    printScannerTable(lineno,column,"double",yytext);
+
+                                    return (doubleConstant); }							
 
 0x[0-9a-fA-F][0-9a-fA-F]*       { column = column + yyleng;
                                     printScannerTable(lineno,column,"hex",yytext);
@@ -181,8 +190,10 @@ false                           {column = column + yyleng;printScannerTable(line
 \t
 \n                              {lineno++; column = 0;}
 " "
-\"{CHAR}* 						{printf("Error in line %d and column %d unclose string",lineno,column);exit(1);}
-.				                {printf("Caracter ilegal <%s> en línea %d y columna %d\n",yytext,lineno,column);exit(1);}
+
+\"{CHAR}* 						{printf("String no cerrado en linea %d y columna %d\n ",lineno,column);exit(1);}
+.				                {printf("Caracter ilegal <%s> en linea %d y columna %d\n",yytext,lineno,column);exit(1);}
+
 
 
 

@@ -3,10 +3,13 @@
  #include <stdio.h>
  #include <stdlib.h>
  int yylex (void);
- void yyerror (char const *);
+ extern int lineno;
+ extern int column;
+ void yyerror (char const *); 
  
 
 %}
+
 
 
 %union {
@@ -130,7 +133,7 @@ Constant : intConstant | doubleConstant | boolConstant |
 %%
 
 void yyerror(char const *x){
-
-	printf("Error %s %d\n",x,yylex());
+	 
+	printf("\nError de parsing en linea %d,columna %d",lineno,column);
 	exit(1);
 }
