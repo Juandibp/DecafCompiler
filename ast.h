@@ -95,10 +95,11 @@ union node{
   statement * stmt;
   type_identifier * typeIdentifier;
   var_decl * varDecl;
-  char *sval;
-  char cval;
+  string sval;
   TipoDatos type;
   int ival;
+  double dval;
+  bool bval;
   std::vector<callout_arg *> * callout_arg_list;
   std::vector<expresion *> * expr_list;
   std::vector<field_decl *> * field_decl_list;
@@ -216,6 +217,14 @@ class assignment_statement : public statement
 		~assignment_statement() {}
 };
 
+
+class expresion: public nodo {
+	public:
+		expresion(){};
+		virtual ~expresion(){};
+
+};
+
 class method_call : public statement, public expresion
 {
 public:
@@ -234,12 +243,6 @@ class normal_method : public method_call
 		~normal_method() {}
 };
 
-class expresion: public nodo {
-	public:
-		expresion(){};
-		virtual ~expresion(){};
-
-};
 
 class callout_method : public method_call{
     string nombre;
@@ -406,17 +409,6 @@ class constanteString : public constante {
 	
 };
 
-class constanteString : public constante {
-	string valor;
-	
-	public:
-		constanteString(string){}
-		string get_valor(){
-			return valor;
-		}
-		~constanteString(){}
-	
-};
 
 class constanteNull : public constante {
 	

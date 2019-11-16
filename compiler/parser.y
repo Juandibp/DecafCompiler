@@ -1,10 +1,12 @@
 %{
+ #include "ast.h"
  #include <math.h>
  #include <stdio.h>
  #include <stdlib.h>
  int yylex (void);
  extern int lineno;
  extern int column;
+ extern union node yylval;
  void yyerror (char const *); 
  
 
@@ -33,8 +35,34 @@
 		           
 		      
 		     
-		   
-		
+%token <sval> stringConstant
+%token <ival> intConstant
+%token <sval> ID
+%token <sval> STR
+%type <assign_op> assign_op
+%type <block> block
+%type <callout_arg> callout_arg
+%type <callout_arg_list> callout_arg_list
+%type <expr> expr
+%type <expr_list> expr_list
+%type <field_decl> field_decl
+%type <field_decl_list> field_decl_list
+%type <identifier_list> identifier_list
+%type <literal> literal
+%type <location> location
+%type <method_call> method_call
+%type <method_decl> method_decl
+%type <method_decl_list> method_decl_list
+%type <program> program
+%type <statement> statement
+%type <statement_list> statement_list
+%type <type> type
+%type <type_identifier> type_identifier
+%type <type_identifier_list> type_identifier_list
+%type <var_decl> var_decl
+%type <var_decl_list> var_decl_list
+%type <var_or_array_identifier> var_or_array_identifier
+%type <var_or_array_identifier_list> var_or_array_identifier_list
 
 %start Program
 
@@ -127,8 +155,14 @@ Call : ident opar Actuals cpar | Expr punto ident opar Actuals cpar
 
 Actuals : Expresion | 
 
-Constant : intConstant | doubleConstant | boolConstant |
-			 stringConstant | null
+Constant : intConstant {	
+            $$ = new constanteInt($1);
+            printf("literal -> INT_VAL\n");
+          }
+		   | doubleConstant 
+		   | boolConstant 
+		   | stringConstant 
+		   | null
 
 %%
 
