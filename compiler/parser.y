@@ -1,15 +1,16 @@
 %{
- #include "ast.h"
+ #include "objetos.h"
  #include <math.h>
  #include <stdio.h>
  #include <stdlib.h>
+ #include <iostream>
+ #include <string>
+ #include <vector>
  int yylex (void);
  extern int lineno;
  extern int column;
  extern union node yylval;
  void yyerror (char const *); 
- 
-
 %}
 
 
@@ -23,7 +24,7 @@
 
 
  
-%token /*Constantes */ intConstant doubleConstant boolConstant stringConstant  
+%token /*Constantes */  doubleConstant boolConstant   
 		/*Operadores*/	plus minus mult	token_div mod  menor menorEql mayor mayorEql eql eqlEql nEql 
 					    token_and token_or token_not scolon comma punto 
 		/*Parentesis*/  /*[ ]*/osqu csqu /*( ) */ opar cpar /*{}*/ ocur ccur
@@ -31,38 +32,15 @@
 								token_this token_extends token_implements token_for token_while token_if token_else
 								token_return token_break token_new token_newArray print readInteger readLine
 		 
-	    ident           
+	               
 		           
 		      
 		     
 %token <sval> stringConstant
 %token <ival> intConstant
-%token <sval> ID
-%token <sval> STR
-%type <assign_op> assign_op
-%type <block> block
-%type <callout_arg> callout_arg
-%type <callout_arg_list> callout_arg_list
-%type <expr> expr
-%type <expr_list> expr_list
-%type <field_decl> field_decl
-%type <field_decl_list> field_decl_list
-%type <identifier_list> identifier_list
-%type <literal> literal
-%type <location> location
-%type <method_call> method_call
-%type <method_decl> method_decl
-%type <method_decl_list> method_decl_list
-%type <program> program
-%type <statement> statement
-%type <statement_list> statement_list
-%type <type> type
-%type <type_identifier> type_identifier
-%type <type_identifier_list> type_identifier_list
-%type <var_decl> var_decl
-%type <var_decl_list> var_decl_list
-%type <var_or_array_identifier> var_or_array_identifier
-%type <var_or_array_identifier_list> var_or_array_identifier_list
+%token <sval> ident
+%type <constant> Constant
+
 
 %start Program
 
@@ -133,7 +111,7 @@ ForStmt : token_for opar ExprBinaria scolon ExprBinaria scolon ExprBinaria cpar 
 ReturnStmt : token_return ExprBinaria scolon
 
 
-BreakStmt : token_break ;
+BreakStmt : token_break scolon
 
 PrintStmt : print opar Expresion cpar scolon
 
@@ -155,14 +133,13 @@ Call : ident opar Actuals cpar | Expr punto ident opar Actuals cpar
 
 Actuals : Expresion | 
 
-Constant : intConstant {	
-            $$ = new constanteInt($1);
-            printf("literal -> INT_VAL\n");
-          }
-		   | doubleConstant 
-		   | boolConstant 
-		   | stringConstant 
-		   | null
+Constant : intConstant{
+			andy = new intConstant(1,1,1);
+		}
+	| doubleConstant 
+	| boolConstant 
+	| stringConstant 
+	| null
 
 %%
 
