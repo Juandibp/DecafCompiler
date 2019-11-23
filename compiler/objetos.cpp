@@ -7,87 +7,87 @@
 
 //PROGRAMA
 
-Programa::Programa(vector<Declaracion *> * Declaraciones){
+ast_Programa::ast_Programa(vector<ast_Declaracion *> * Declaraciones){
     this->declaraciones=Declaraciones;
 }
 
-vector<Declaracion *> * Programa::getDeclaraciones()
+vector<ast_Declaracion *> * ast_Programa::getDeclaraciones()
 {
     return this->declaraciones;
 }
 
 //DECLARACIOn
 
-Declaracion::Declaracion(int linea, int columna, int tipo){
+ast_Declaracion::ast_Declaracion(int linea, int columna, int tipo){
     this->linea=linea;
     this->columna=columna;
     this->tipoDeclaracion=tipo;
 }
 
-int Declaracion::getLinea(){
+int ast_Declaracion::getLinea(){
     return this->linea;
 }
 
-int Declaracion::getColumna(){
+int ast_Declaracion::getColumna(){
     return this->columna;
 }
 
-int Declaracion::getTipo(){
+int ast_Declaracion::getTipo(){
     return this->tipoDeclaracion;
 }
 
 //VARIABLES
 
-VariableDecl::VariableDecl(int linea, int columna, int tipo,Variable* var): Declaracion(linea,columna,tipo){
+ast_VariableDecl::ast_VariableDecl(int linea, int columna, int tipo,ast_Variable* var): ast_Declaracion(linea,columna,tipo){
     this->linea=linea;
     this->columna=columna;
     this->tipoDeclaracion=tipo;
     this ->var=var;
 }
 
-Variable * VariableDecl::getVar(){
+ast_Variable * ast_VariableDecl::getVar(){
     return this->var;
 }
 
-Variable::Variable(Type* tipo, string ident){
+ast_Variable::ast_Variable(ast_Type* tipo, string ident){
     this->tipo=tipo;
     this->ident=ident;
 }
 
-Type * Variable::getTipo(){
+ast_Type * ast_Variable::getTipo(){
     return this->tipo;
 }
 
-string Variable::getString(){
+string ast_Variable::getString(){
     return this->ident;
 }
 
 //TYPES
-Type::Type(TipoDatos tipo ,bool array){
+ast_Type::ast_Type(TipoDatos tipo ,bool array){
     this->tipo=tipo;
     this->isArray=array;
 }
-Type::Type(TipoDatos tipo,bool array,string ident){
+ast_Type::ast_Type(TipoDatos tipo,bool array,string ident){
     this->tipo=tipo;
     this->isArray=array;
     this->ident=ident;
 }
 
-TipoDatos Type::getTipo(){
+TipoDatos ast_Type::getTipo(){
     return this->tipo;
 }
 
-bool Type::getIsArray(){
+bool ast_Type::getIsArray(){
     return this->isArray;
 }
 
-string Type::getIdent(){
+string ast_Type::getIdent(){
     return this->ident;
 }
 
-//FunctionDecl
+//ast_FunctionDecl
 
-FunctionDecl::FunctionDecl(int linea,int columna,int tipoDecl,Type * tipoFunc, string ident, Formals * formals, StmtBlock * stmtBlock): Declaracion(linea,columna,tipoDecl){
+ast_FunctionDecl::ast_FunctionDecl(int linea,int columna,int tipoDecl,ast_Type * tipoFunc, string ident, ast_Formals * formals, ast_StmtBlock * stmtBlock): ast_Declaracion(linea,columna,tipoDecl){
     this->linea=linea;
     this->columna=columna;
     this->tipoDeclaracion=tipoDecl;
@@ -97,35 +97,35 @@ FunctionDecl::FunctionDecl(int linea,int columna,int tipoDecl,Type * tipoFunc, s
     this->stmtBlock = stmtBlock;  
 }
 
-Type * FunctionDecl::getTipoFuncion(){
+ast_Type * ast_FunctionDecl::getTipoFuncion(){
     return this->tipoFunc;
 }
 
-string FunctionDecl::getIdent(){
+string ast_FunctionDecl::getIdent(){
     return this->ident;
 }
 
-Formals * FunctionDecl::getFormals(){
+ast_Formals * ast_FunctionDecl::getFormals(){
     return this->formals;
 }
 
-StmtBlock * FunctionDecl::getStmtBlock(){
+ast_StmtBlock * ast_FunctionDecl::getStmtBlock(){
     return this->stmtBlock;
 }
 
-//Formals
+//ast_Formals
 
-Formals::Formals(vector<Variable *> * variables){
+ast_Formals::ast_Formals(vector<ast_Variable *> * variables){
     this->variables = variables;
 }
 
-vector<Variable *> * Formals::getVariables(){
+vector<ast_Variable *> * ast_Formals::getVariables(){
     return this->variables;
 }
 
-//ClassDecl
+//ast_ClassDecl
 
-ClassDecl::ClassDecl(int linea,int columna,int tipoDecl,string ident,vector<string> * extends, vector<string> * implements, vector<Field *> * fields):Declaracion(linea,columna,tipoDecl){
+ast_ClassDecl::ast_ClassDecl(int linea,int columna,int tipoDecl,string ident,vector<string> * extends, vector<string> * implements, vector<ast_Field *> * fields):ast_Declaracion(linea,columna,tipoDecl){
     this->linea=linea;
     this->columna=columna;
     this->tipoDeclaracion=tipoDecl;
@@ -135,49 +135,49 @@ ClassDecl::ClassDecl(int linea,int columna,int tipoDecl,string ident,vector<stri
     this->fields = fields; 
 }
 
-string ClassDecl::getIdent(){
+string ast_ClassDecl::getIdent(){
     return this-> ident;
 }
 
-vector<string> * ClassDecl::getExtenteds(){
+vector<string> * ast_ClassDecl::getExtenteds(){
     return this-> extends;
 }
 
-vector<string> * ClassDecl::getImplements(){
+vector<string> * ast_ClassDecl::getImplements(){
     return this-> implements;
 }
 
-vector<Field *> * ClassDecl::getFields(){
+vector<ast_Field *> * ast_ClassDecl::getFields(){
     return this-> fields;
 }
 
-//Field
+//ast_Field
 
-Field::Field(VariableDecl* varDecl){
+ast_Field::ast_Field(ast_VariableDecl* varDecl){
     this->tipoDeclracion = 1;
     this->variableDecl = varDecl;
 }
 
-Field::Field(FunctionDecl* funDecl){
+ast_Field::ast_Field(ast_FunctionDecl* funDecl){
     this->tipoDeclracion = 2;
     this->functionDecl = funDecl;
 }
 
-int Field::getTipoDecl(){
+int ast_Field::getTipoDecl(){
     return this->tipoDeclracion;
 }
 
-VariableDecl * Field::getVariableDecl(){
+ast_VariableDecl * ast_Field::getVariableDecl(){
     return this->variableDecl;
 }
 
-FunctionDecl * Field::getFunctionDecl(){
+ast_FunctionDecl * ast_Field::getFunctionDecl(){
     return this->functionDecl;
 }
 
-//InterfaceDecl
+//ast_InterfaceDecl
 
-InterfaceDecl::InterfaceDecl(int linea,int columna,int tipoDecl, string ident, vector<Prototype *> * prototypes): Declaracion(linea,columna,tipoDecl){
+ast_InterfaceDecl::ast_InterfaceDecl(int linea,int columna,int tipoDecl, string ident, vector<ast_Prototype *> * prototypes): ast_Declaracion(linea,columna,tipoDecl){
     this->linea=linea;
     this->columna=columna;
     this->tipoDeclaracion=tipoDecl;
@@ -185,67 +185,67 @@ InterfaceDecl::InterfaceDecl(int linea,int columna,int tipoDecl, string ident, v
     this->prototypes = prototypes;    
 }
 
-string InterfaceDecl::getIdent(){
+string ast_InterfaceDecl::getIdent(){
     return this->ident;
 }
 
-vector<Prototype *> * InterfaceDecl::getPrototype(){
+vector<ast_Prototype *> * ast_InterfaceDecl::getPrototype(){
   return this->prototypes;  
 }
 
-//Prototype
+//ast_Prototype
 
-Prototype::Prototype(Type * tipo, string ident,Formals * formals){
+ast_Prototype::ast_Prototype(ast_Type * tipo, string ident,ast_Formals * formals){
     this->tipo = tipo;
     this->ident = ident;
     this->formals = formals;
 }
 
-Type * Prototype::getTipo(){
+ast_Type * ast_Prototype::getTipo(){
     return this->tipo;
 }
 
-string Prototype::getIdent(){
+string ast_Prototype::getIdent(){
     return this->ident;
 }
 
-Formals * Prototype::getFormals(){
+ast_Formals * ast_Prototype::getFormals(){
     return this->formals;
 }
 
-//Stmt
+//ast_Stmt
 
-Stmt::Stmt(int linea, int columna, int tipo){
+ast_Stmt::ast_Stmt(int linea, int columna, int tipo){
     this->linea = linea;
     this->columna = columna;
     this->tipoStmt = linea;
 }
 
-int Stmt::getLinea(){
+int ast_Stmt::getLinea(){
     return this->linea;
 }
 
-int Stmt::getColumna(){
+int ast_Stmt::getColumna(){
     return this->columna;
 }
 
-int Stmt::getTipoStmt(){
+int ast_Stmt::getTipoStmt(){
     return this->tipoStmt;
 }
 
-//StmtBase
+//ast_StmtBase
 
-StmtBase::StmtBase(int linea,int columna,Expr * expresion):Stmt(linea,columna,1){
+ast_StmtBase::ast_StmtBase(int linea,int columna,ast_Expr * expresion):ast_Stmt(linea,columna,1){
     this->expresion = expresion;
 }
 
-Expr * StmtBase::getExpresion(){
+ast_Expr * ast_StmtBase::getExpresion(){
     return this->expresion;
 }
 
-//IfStmt
+//ast_IfStmt
 
-IfStmt::IfStmt(int linea,int columna,Expr * expresion,Stmt * stmt, Stmt * elseStmt):Stmt(linea,columna,2){
+ast_IfStmt::ast_IfStmt(int linea,int columna,ast_Expr * expresion,ast_Stmt * stmt, ast_Stmt * elseStmt):ast_Stmt(linea,columna,2){
     this->expresion = expresion;
     this->stmt = stmt;
     this->haveElse = true;
@@ -253,48 +253,48 @@ IfStmt::IfStmt(int linea,int columna,Expr * expresion,Stmt * stmt, Stmt * elseSt
 
 }
 
-IfStmt::IfStmt(int linea,int columna,Expr * expresion,Stmt * stmt):Stmt(linea,columna,2){
+ast_IfStmt::ast_IfStmt(int linea,int columna,ast_Expr * expresion,ast_Stmt * stmt):ast_Stmt(linea,columna,2){
     this->expresion = expresion;
     this->stmt = stmt;
     this->haveElse = false;
 
 }
 
-Expr * IfStmt::getExpresion(){
+ast_Expr * ast_IfStmt::getExpresion(){
     return this->expresion;
 }
 
 
-Stmt * IfStmt ::getStmt(){
+ast_Stmt * ast_IfStmt ::getStmt(){
     return this->stmt;
 }
 
-bool IfStmt ::getHaveElse(){
+bool ast_IfStmt ::getHaveElse(){
     return this->haveElse;
 }
 
-Stmt * IfStmt ::getElseStmt(){
+ast_Stmt * ast_IfStmt ::getElseStmt(){
     return this->elseStmt;
 }
 
-//WhileStmt
+//ast_WhileStmt
 
-WhileStmt::WhileStmt(int linea, int columna,Expr * expresion, Stmt* stmt):Stmt(linea,columna,3){
+ast_WhileStmt::ast_WhileStmt(int linea, int columna,ast_Expr * expresion, ast_Stmt* stmt):ast_Stmt(linea,columna,3){
     this->expresion = expresion;
     this->stmt = stmt;
 }
 
-Expr * WhileStmt::getExpresion(){
+ast_Expr * ast_WhileStmt::getExpresion(){
     return this->expresion;
 }
 
-Stmt * WhileStmt::getStmt(){
+ast_Stmt * ast_WhileStmt::getStmt(){
     return this->stmt;
 }
 
-//ForStmt
+//ast_ForStmt
 
-ForStmt::ForStmt(int linea, int columna, Expr * firstExpr, Expr * secondExpr,Expr * thirdExpresion,Stmt * stmt): Stmt(linea,columna,4){
+ast_ForStmt::ast_ForStmt(int linea, int columna, ast_Expr * firstExpr, ast_Expr * secondExpr,ast_Expr * thirdExpresion,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
     this->firstExpr = firstExpr;
     this->haveFirstExpr = true;
 
@@ -308,7 +308,7 @@ ForStmt::ForStmt(int linea, int columna, Expr * firstExpr, Expr * secondExpr,Exp
 
 }
 
-ForStmt::ForStmt(int linea, int columna, Expr * firstExpr, Expr * secondExpr,Stmt * stmt): Stmt(linea,columna,4){
+ast_ForStmt::ast_ForStmt(int linea, int columna, ast_Expr * firstExpr, ast_Expr * secondExpr,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
     this->firstExpr = firstExpr;
     this->haveFirstExpr = true;
 
@@ -321,7 +321,7 @@ ForStmt::ForStmt(int linea, int columna, Expr * firstExpr, Expr * secondExpr,Stm
 
 }
 
-ForStmt::ForStmt(int linea, int columna, Expr * firstExpr,Stmt * stmt): Stmt(linea,columna,4){
+ast_ForStmt::ast_ForStmt(int linea, int columna, ast_Expr * firstExpr,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
     this->firstExpr = firstExpr;
     this->haveFirstExpr = true;
 
@@ -333,7 +333,7 @@ ForStmt::ForStmt(int linea, int columna, Expr * firstExpr,Stmt * stmt): Stmt(lin
 
 }
 
-ForStmt::ForStmt(int linea, int columna,Stmt * stmt): Stmt(linea,columna,4){
+ast_ForStmt::ast_ForStmt(int linea, int columna,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
     this->haveFirstExpr = false;
 
     this->haveSecondExpr = false;
@@ -344,341 +344,341 @@ ForStmt::ForStmt(int linea, int columna,Stmt * stmt): Stmt(linea,columna,4){
 
 }
 
-Expr * ForStmt::getFirstExpr(){
+ast_Expr * ast_ForStmt::getFirstExpr(){
     return this->firstExpr;
 }
 
-Expr * ForStmt::getSecondExpr(){
+ast_Expr * ast_ForStmt::getSecondExpr(){
     return this->secondExpr;
 }
 
-Expr * ForStmt::getThirdExpr(){
+ast_Expr * ast_ForStmt::getThirdExpr(){
     return this->thirdExpr;
 }
 
-bool ForStmt::getHaveFirstExpr(){
+bool ast_ForStmt::getHaveFirstExpr(){
     return this->haveFirstExpr;
 }
 
-bool ForStmt::getHaveSecondExpr(){
-    return this->getHaveSecondExpr;
+bool ast_ForStmt::getHaveSecondExpr(){
+    return this->haveSecondExpr;
 }
 
-bool ForStmt::getHaveThirdExpr(){
-    return this->getHaveThirdExpr;
+bool ast_ForStmt::getHaveThirdExpr(){
+    return this->haveThirdExpr;
 }
 
-Stmt * ForStmt::getStmt(){
+ast_Stmt * ast_ForStmt::getStmt(){
     return this->stmt;
 }
 
 
-//ReturnStmt
+//ast_ReturnStmt
 
-ReturnStmt::ReturnStmt(int linea, int columna, Expr * expresion): Stmt(linea,columna,5){
+ast_ReturnStmt::ast_ReturnStmt(int linea, int columna, ast_Expr * expresion): ast_Stmt(linea,columna,5){
     this->expresion = expresion;
     this->haveExpr = true;
 }
 
-ReturnStmt::ReturnStmt(int linea, int columna): Stmt(linea,columna,5){
+ast_ReturnStmt::ast_ReturnStmt(int linea, int columna): ast_Stmt(linea,columna,5){
     this->haveExpr = false;
 }
 
 
-Expr * ReturnStmt::getExpresion(){
+ast_Expr * ast_ReturnStmt::getExpresion(){
     return this->expresion;
 }
 
-bool ReturnStmt::getHaveExpr(){
+bool ast_ReturnStmt::getHaveExpr(){
     return this->haveExpr;
 }
 
-//BreakStmt
+//ast_BreakStmt
 
-BreakStmt::BreakStmt(int linea, int columna):Stmt(linea,columna,6){
+ast_BreakStmt::ast_BreakStmt(int linea, int columna):ast_Stmt(linea,columna,6){
 
 }
 
-//PrintStmt
+//ast_PrintStmt
 
-PrintStmt::PrintStmt(int linea,int columna,vector<Expr *> * expresiones):Stmt(linea,columna,7){
+ast_PrintStmt::ast_PrintStmt(int linea,int columna,vector<ast_Expr *> * expresiones):ast_Stmt(linea,columna,7){
     this->expresiones = expresiones;
 }
 
-vector<Expr *> * PrintStmt::getExpresiones(){
+vector<ast_Expr *> * ast_PrintStmt::getExpresiones(){
     return this->expresiones;
 }
 
-//StmtBlock
+//ast_StmtBlock
 
-StmtBlock:: StmtBlock(int linea, int columna,vector<VariableDecl *> * variableDecls,vector<Stmt *> * stmts):Stmt(linea,columna,8){
+ast_StmtBlock:: ast_StmtBlock(int linea, int columna,vector<ast_VariableDecl *> * variableDecls,vector<ast_Stmt *> * stmts):ast_Stmt(linea,columna,8){
     this->variableDecls = variableDecls;
     this->stmts = stmts; 
 }
 
-vector<VariableDecl *> * StmtBlock::getVariableDecls(){
+vector<ast_VariableDecl *> * ast_StmtBlock::getVariableDecls(){
     return this-> variableDecls;
 }
 
-vector<Stmt *> * StmtBlock::getStmts(){
+vector<ast_Stmt *> * ast_StmtBlock::getStmts(){
     return this->stmts;
 }
 
-//Expr
+//ast_Expr
 
-Expr::Expr(int linea,int columna, int tipo){
+ast_Expr::ast_Expr(int linea,int columna, int tipo){
     this-> linea = linea;
     this-> columna = columna;
     this-> tipoExpr = tipo;
 }
 
-int Expr::getLinea(){
+int ast_Expr::getLinea(){
     return this->linea;
 }
 
-int Expr::getColumna(){
+int ast_Expr::getColumna(){
     return this->columna;
 }
 
-int Expr::getTipoExpr(){
+int ast_Expr::getTipoExpr(){
     return this->tipoExpr;
 }
 
-//ExprBinary
+//ast_ExprBinary
 
-ExprBinary::ExprBinary(int linea,int columna,Expr * exprIzq, Expr * exprDer, TipoOperacion tipoOp):Expr(linea,columna,1){
+ast_ExprBinary::ast_ExprBinary(int linea,int columna,ast_Expr * exprIzq, ast_Expr * exprDer, TipoOperacion tipoOp):ast_Expr(linea,columna,1){
     this->exprIzq = exprIzq;
     this->exprDer = exprDer;
     this->tipoOp = tipoOp;
 }
 
-Expr * ExprBinary::getExprIzq(){
+ast_Expr * ast_ExprBinary::getExprIzq(){
     return this->exprIzq;
 }
 
-Expr * ExprBinary::getExprDer(){
+ast_Expr * ast_ExprBinary::getExprDer(){
     return this->exprDer;
 }
 
-TipoOperacion ExprBinary::getTipoOp(){
+TipoOperacion ast_ExprBinary::getTipoOp(){
     return this->tipoOp;
 }
 
-//ExprUnary
+//ast_ExprUnary
 
-ExprUnary::ExprUnary(int linea, int columna, Expr * expresion,TipoOperacion tipoOp):Expr(linea,columna,2){
+ast_ExprUnary::ast_ExprUnary(int linea, int columna, ast_Expr * expresion,TipoOperacion tipoOp):ast_Expr(linea,columna,2){
     this->expresion = expresion;
     this->tipoOp= tipoOp;
 }
 
-Expr * ExprUnary::getExpresion(){
+ast_Expr * ast_ExprUnary::getExpresion(){
     return this->expresion;
 }
 
-TipoOperacion ExprUnary::getTipoOp(){
+TipoOperacion ast_ExprUnary::getTipoOp(){
     return this->tipoOp;
 }
 
-//ExprRead
+//ast_ExprRead
 
-ExprRead::ExprRead(int linea,int columna,int tipoRead):Expr(linea,columna,3){
+ast_ExprRead::ast_ExprRead(int linea,int columna,int tipoRead):ast_Expr(linea,columna,3){
     this->tipoRead = tipoRead;
 }
 
-int ExprRead::getTipoRead(){
+int ast_ExprRead::getTipoRead(){
     return tipoRead;
 }
 
-//ExprNew
+//ast_ExprNew
 
-ExprNew::ExprNew(int linea,int columna,string ident):Expr(linea,columna,4){
+ast_ExprNew::ast_ExprNew(int linea,int columna,string ident):ast_Expr(linea,columna,4){
     this->ident = ident;
 }
 
-string ExprNew::getIdent(){
+string ast_ExprNew::getIdent(){
     return this->ident;
 }
 
 //ExprNewArrray
 
-ExprNewArray::ExprNewArray(int linea, int columna, Expr * expresion, TipoDatos tipoDato):Expr(linea,columna,5){
+ast_ExprNewArray::ast_ExprNewArray(int linea, int columna, ast_Expr * expresion, TipoDatos tipoDato):ast_Expr(linea,columna,5){
     this->expresion = expresion;
     this->tipoDato = tipoDato;
 }
 
-Expr * ExprNewArray::getExpresion(){
+ast_Expr * ast_ExprNewArray::getExpresion(){
     return this->expresion;
 }
 
-TipoDatos ExprNewArray::getTipoDatos(){
+TipoDatos ast_ExprNewArray::getTipoDatos(){
     return this->tipoDato;
 }
 
 //Lvalue
 
-LValue::LValue(int linea, int columna, int tipoLValue):Expr(linea,columna,6){
+ast_LValue::ast_LValue(int linea, int columna, int tipoLValue):ast_Expr(linea,columna,6){
     this->tipoLvalue = tipoLValue;
 }
 
-int LValue::getTipoLvalue(){
+int ast_LValue::getTipoLvalue(){
     return this->tipoLvalue;
 }
 
-//LValueSimple
+//ast_LValueSimple
 
-LValueSimple::LValueSimple(int linea,int columna, string ident):LValue(linea,columna,1){
+ast_LValueSimple::ast_LValueSimple(int linea,int columna, string ident):ast_LValue(linea,columna,1){
     this->ident = ident;
 
 }
 
-string LValueSimple::getIdent(){
+string ast_LValueSimple::getIdent(){
     return this->ident;
 }
 
-//LvalueExpr
+//ast_LvalueExpr
 
-LvalueExpr::LvalueExpr(int linea, int columna, Expr * expresion, string ident):LValue(linea,columna,2){
+ast_LvalueExpr::ast_LvalueExpr(int linea, int columna, ast_Expr * expresion, string ident):ast_LValue(linea,columna,2){
     this->expresion = expresion;
     this->ident = ident;
 }
 
-Expr * LvalueExpr:: getExpr(){
+ast_Expr * ast_LvalueExpr:: getExpr(){
     return this-> expresion;
 }
 
-string LvalueExpr::getIdent(){
+string ast_LvalueExpr::getIdent(){
     return this->ident;
 }
 
-//LvalueArray
+//ast_LvalueArray
 
-LvalueArray::LvalueArray(int linea, int columna,Expr * firstEXpr, Expr* secondExpr):LValue(linea,columna,3){
+ast_LvalueArray::ast_LvalueArray(int linea, int columna,ast_Expr * firstEXpr, ast_Expr* secondExpr):ast_LValue(linea,columna,3){
     this->firstExpr = firstEXpr;
     this->secondExpr = secondExpr;
 }
 
-Expr * LvalueArray :: getFirstExpr(){
+ast_Expr * ast_LvalueArray :: getFirstExpr(){
     return this->firstExpr;
 }
 
-Expr * LvalueArray::getSecondExpr(){
+ast_Expr * ast_LvalueArray::getSecondExpr(){
     return this->secondExpr;
 }
 
 
-//Call
+//ast_Call
 
-Call::Call(int linea, int columna, int tipoCall):Expr(linea,columna,7){
+ast_Call::ast_Call(int linea, int columna, int tipoCall):ast_Expr(linea,columna,7){
     this->tipoCall = tipoCall;
 }
 
-int Call::getTipoCall(){
+int ast_Call::getTipoCall(){
     return this->tipoCall;
 }
 
 
-//CallSimple
+//ast_CallSimple
 
-CallSimple::CallSimple(int linea,int columna, string ident, Actuals * actuals): Call(linea,columna,1){
+ast_CallSimple::ast_CallSimple(int linea,int columna, string ident, ast_Actuals * actuals): ast_Call(linea,columna,1){
     this->ident = ident;
     this->actuals = actuals;
 }
 
-string CallSimple::getIdent(){
+string ast_CallSimple::getIdent(){
     return this->ident;
 }
 
-Actuals * CallSimple::getActuals(){
+ast_Actuals * ast_CallSimple::getActuals(){
     return this->actuals;
 }
 
-//CallExpr
+//ast_CallExpr
 
-CallExpr::CallExpr(int linea,int columna,Expr * expresion, string ident, Actuals * actuals): Call(linea,columna,2){
+ast_CallExpr::ast_CallExpr(int linea,int columna,ast_Expr * expresion, string ident, ast_Actuals * actuals): ast_Call(linea,columna,2){
     this->expr = expresion;
     this->ident = ident;
     this->actuals = actuals;
 }
 
-Expr * CallExpr::getExpr(){
+ast_Expr * ast_CallExpr::getExpr(){
     return this->expr;
 }
 
-string CallExpr::getIdent(){
+string ast_CallExpr::getIdent(){
     return this->ident;
 }
 
-Actuals * CallExpr::getActuals(){
+ast_Actuals * ast_CallExpr::getActuals(){
     return this->actuals;
 }
 
 
-//Actuals
+//ast_Actuals
 
-Actuals::Actuals(vector<Expr *> * expresiones){
+ast_Actuals::ast_Actuals(vector<ast_Expr *> * expresiones){
     this->expresiones = expresiones;
 }
 
-vector<Expr *> * Actuals::getExpresiones(){
+vector<ast_Expr *> * ast_Actuals::getExpresiones(){
     return this->expresiones;
 }
 
-//Constant
+//ast_Constant
 
-Constant::Constant(int linea, int columna,int tipoConst):Expr(linea,columna,8){
+ast_Constant::ast_Constant(int linea, int columna,int tipoConst):ast_Expr(linea,columna,8){
     this->tipoConst = tipoConst;
 }
 
-int Constant::getTipoConst(){
+int ast_Constant::getTipoConst(){
     return tipoConst;
 }
 
 
-//IntConstant
+//ast_IntConstant
 
-IntConstant::IntConstant(int linea, int columna, int valor): Constant(linea,columna,1){
+ast_IntConstant::ast_IntConstant(int linea, int columna, int valor): ast_Constant(linea,columna,1){
     this->valor = valor;
 }
 
-int IntConstant::getValor(){
+int ast_IntConstant::getValor(){
     return this->valor;
 }
 
-//DoubleConstant
+//ast_DoubleConstant
 
-DoubleConstant::DoubleConstant(int linea, int columna, double valor): Constant(linea,columna,2){
+ast_DoubleConstant::ast_DoubleConstant(int linea, int columna, double valor): ast_Constant(linea,columna,2){
     this->valor = valor;
 }
 
-double DoubleConstant::getValor(){
-    return this->valor;
-}
-
-
-//BoolConstant
-
-BoolConstant::BoolConstant(int linea, int columna, bool valor): Constant(linea,columna,3){
-    this->valor = valor;
-}
-
-bool BoolConstant::getValor(){
-    return this->valor;
-}
-
-//StringConstant
-
-StringConstant::StringConstant(int linea, int columna, string valor): Constant(linea,columna,4){
-    this->valor = valor;
-}
-
-string StringConstant::getValor(){
+double ast_DoubleConstant::getValor(){
     return this->valor;
 }
 
 
-//NullConstant
+//ast_BoolConstant
 
-NullConstant::NullConstant(int linea, int columna): Constant(linea,columna,5){
+ast_BoolConstant::ast_BoolConstant(int linea, int columna, bool valor): ast_Constant(linea,columna,3){
+    this->valor = valor;
+}
+
+bool ast_BoolConstant::getValor(){
+    return this->valor;
+}
+
+//ast_StringConstant
+
+ast_StringConstant::ast_StringConstant(int linea, int columna, string valor): ast_Constant(linea,columna,4){
+    this->valor = valor;
+}
+
+string ast_StringConstant::getValor(){
+    return this->valor;
+}
+
+
+//ast_NullConstant
+
+ast_NullConstant::ast_NullConstant(int linea, int columna): ast_Constant(linea,columna,5){
 }
 
 

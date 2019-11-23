@@ -2,7 +2,8 @@
 %option yylineno
 %{
 	
-	#include "parser.tab.h"
+	#include "compiler/objetos.h"
+  #include "parser.tab.h"
 	#include <string.h>
 	#include <stdlib.h>
 
@@ -28,12 +29,12 @@ saltoLinea \n
 
 	/* Operadores  */
 "+"                              {column = column + yyleng;
-                                  printScannerTable(lineno,column,"plus","+");
-                                  return (plus);
+                                  printScannerTable(lineno,column,"token_plus","+");
+                                  return (token_plus);
                                 }
 "-"                              {column = column + yyleng;
-                                  printScannerTable(lineno,column,"minus","-");
-                                  return (minus);
+                                  printScannerTable(lineno,column,"token_minus","-");
+                                  return (token_minus);
                                 }
 "*"                              {column = column + yyleng;
                                   printScannerTable(lineno,column,"mult","*");

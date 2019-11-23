@@ -1,5 +1,5 @@
 %{
- #include "objetos.h"
+ #include "compiler/objetos.h"
  #include <math.h>
  #include <stdio.h>
  #include <stdlib.h>
@@ -25,7 +25,7 @@
 
  
 %token /*Constantes */  doubleConstant boolConstant   
-		/*Operadores*/	plus minus mult	token_div mod  menor menorEql mayor mayorEql eql eqlEql nEql 
+		/*Operadores*/	token_plus token_minus mult	token_div mod  menor menorEql mayor mayorEql eql eqlEql nEql 
 					    token_and token_or token_not scolon comma punto 
 		/*Parentesis*/  /*[ ]*/osqu csqu /*( ) */ opar cpar /*{}*/ ocur ccur
 		/*Palabras Reservadas*/ token_void Type_int Type_double Type_bool Type_string token_class token_interface null
@@ -45,11 +45,12 @@
 %start Program
 
 %%
-Program : Decl Multi_Decl
+Program : Decl Multi_Decl 
+
 
 Multi_Decl: Decl Multi_Decl | 
 
-Decl : VariableDecl | FunctionDecl | ClassDecl | InterfaceDecl
+Decl : VariableDecl | FunctionDecl | ClassDecl | InterfaceDecl;
 
 VariableDecl : Variable scolon
 
@@ -120,8 +121,8 @@ Expresion: Expr Multi_Expresion
 Multi_Expresion : comma Expr Multi_Expresion |
 
 Expr : LValue eql Expr | Constant | LValue | token_this | Call | opar Expr cpar |
-	   Expr plus Expr | Expr minus Expr | Expr mult Expr | Expr token_div Expr |
-	   Expr mod Expr | minus Expr | Expr menor Expr | Expr menorEql Expr |
+	   Expr token_plus Expr | Expr token_minus Expr | Expr mult Expr | Expr token_div Expr |
+	   Expr mod Expr | token_minus Expr | Expr menor Expr | Expr menorEql Expr |
 	   Expr mayor Expr | Expr mayorEql Expr | Expr eqlEql Expr | Expr nEql Expr |
 	   Expr token_and Expr | Expr token_or Expr |  token_not Expr | readInteger opar cpar  |
 	   readLine opar cpar | token_new opar ident cpar | token_newArray opar Expr comma Type cpar
@@ -133,10 +134,13 @@ Call : ident opar Actuals cpar | Expr punto ident opar Actuals cpar
 
 Actuals : Expresion | 
 
-Constant : intConstant{
-			andy = new intConstant(1,1,1);
-		}
-	| doubleConstant 
+Constant : intConstant {
+	$$ = new ast_IntConstant(lineno,column,$1);
+	printf("intContant-> linea: %d, columna: %d, valor: %d\n",lineno,column,$1);
+	}
+	| doubleConstant {
+		
+	}
 	| boolConstant 
 	| stringConstant 
 	| null
