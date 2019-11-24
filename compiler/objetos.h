@@ -104,6 +104,7 @@ class ast_Programa{
    public:
         ast_Programa(vector<ast_Declaracion *> *);
         vector<ast_Declaracion*>* getDeclaraciones();
+        void printTree();
         ~ast_Programa(){};
 };
 
