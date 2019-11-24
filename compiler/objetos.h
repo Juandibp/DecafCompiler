@@ -22,6 +22,7 @@ class ast_Stmt;
 class ast_StmtBlock;
 class ast_StmtBase;
 class ast_IfStmt;
+class ast_ElseStmt;
 class ast_WhileStmt;
 class ast_ForStmt;
 class ast_ReturnStmt;
@@ -47,57 +48,18 @@ class ast_DoubleConstant;
 class ast_BoolConstant;
 class ast_StringConstant;
 class ast_NullConstant;
+class ast_StmtOrVariableDecl;
 class Nodo;
 
 
 
 
-enum class TipoDatos {
-    tipoInt,
-    tipoVoid,
-    tipoBool,
-	tipoDouble,
-	tipoString,
-    tipoIdent
-};
-
-enum class TipoStmt {
-    tipoBase,
-    tipoIf,
-    tipoWhile,
-    tipoFor,
-    tipoBreak,
-    tipoReturn,
-    tipoPrint,
-    tipoBlock
-};
-
-enum class TipoOperacion {
-    tipoEql,
-    tipoPlus,
-    tipoMinus,
-    tipoMult,
-    tipoToken_div,
-    tipoMod,
-    tipoMenor,
-    tipoMenorEql,
-    tipoMayor,
-    tipoMayorEql,
-    tipoEqlEql,
-    tipoNEql,
-    tipoToken_and,
-    tipoToken_or,
-    tipoToken_not
-
-
-};
 
 union node{
   int ival;
   double dval;
   bool bval;
   char *sval ;
-  TipoDatos tipoDatos;
   ast_Programa * programa;
   ast_Declaracion * declaracion;
   ast_VariableDecl * variableDecl;
@@ -112,6 +74,7 @@ union node{
   ast_StmtBlock * stmtBlock;
   ast_Stmt * stmt;
   ast_IfStmt * ifStmt;
+  ast_ElseStmt * elseStmt;
   ast_WhileStmt * whileStmt;
   ast_ForStmt * forStmt;
   ast_ReturnStmt * returnStmt;
@@ -123,6 +86,12 @@ union node{
   ast_Actuals * actuals;
   ast_Constant * constant;
   std::vector<ast_Declaracion *> * listaDecl;
+  std::vector<ast_Expr *> * listaExpr; 
+  std::vector<ast_StmtOrVariableDecl *> * listaStmtOrVarDecl; 
+  std::vector<ast_Prototype *> * listaPrototype; 
+  std::vector<string> * listaIdent; 
+  std::vector<ast_Field *> * listaField; 
+  std::vector<ast_Variable *> * listaVariables;
   
   
 };
@@ -150,7 +119,7 @@ class ast_Declaracion {
     protected:
         int linea;
         int columna;
-        int tipoDeclaracion;
+        int tipoDeclaracion; // var = 1, Func = 2 , Class = 3, Inter = 4
 
 };
 
@@ -179,15 +148,23 @@ class ast_Variable {
 };
 
 class ast_Type {
-    TipoDatos tipo;
+    int tipoDato; /*
+                    tipoInt = 1
+                    tipoVoid = 2
+                    tipoBool = 3
+                    tipoDouble = 4
+                    tipoString = 5
+                    tipoIdent = 6
+                */
     bool isArray;
     string ident;
 
     public:
-        ast_Type(TipoDatos,bool);
-        ast_Type(TipoDatos,bool,string);
-        TipoDatos getTipo();
+        ast_Type(int,bool);
+        ast_Type(int,bool,string);
+        int getTipo();
         bool getIsArray();
+        void setIsArray(bool);
         string getIdent();
         ~ast_Type(){};
 };
@@ -218,14 +195,14 @@ class ast_Formals {
 
 class ast_ClassDecl : public ast_Declaracion{
     string ident;
-    vector<string> * extends;
+    string extends;
     vector<string> * implements;
     vector<ast_Field *> * fields;
 
     public:
-        ast_ClassDecl(int,int,int,string,vector<string> *,vector<string> *,vector<ast_Field *> *);
+        ast_ClassDecl(int,int,int,string,string,vector<string> *,vector<ast_Field *> *);
         string getIdent();
-        vector<string> * getExtenteds();
+        string getExtenteds();
         vector<string> * getImplements();
         vector<ast_Field *> * getFields();
         ~ast_ClassDecl(){};
@@ -285,7 +262,7 @@ class ast_Stmt {
     protected:
         int linea;
         int columna;
-        int tipoStmt; // Base = 1, If = 2, while = 3, For = 4, return = 5, break = 6, print = 7, block = 8
+        int tipoStmt; // Base = 1, If = 2, while = 3, For = 4, return = 5, break = 6, print = 7, block = 8, Else = 9
 };
 
 
@@ -303,17 +280,26 @@ class ast_StmtBase : public ast_Stmt {
 class ast_IfStmt : public ast_Stmt {
     ast_Expr * expresion;
     ast_Stmt * stmt;
-    bool haveElse;
-    ast_Stmt * elseStmt;
+    ast_ElseStmt * elseStmt;
 
     public:
-        ast_IfStmt(int,int,ast_Expr *,ast_Stmt *,ast_Stmt *);
-        ast_IfStmt(int,int,ast_Expr *,ast_Stmt *);
+        ast_IfStmt(int,int,ast_Expr *,ast_Stmt *,ast_ElseStmt *);
         ast_Expr * getExpresion();
         ast_Stmt * getStmt();
-        bool getHaveElse();
-        ast_Stmt * getElseStmt();
+        ast_ElseStmt * getElseStmt();
         ~ast_IfStmt(){};
+};
+
+class ast_ElseStmt : public ast_Stmt {
+    bool isElseNull;
+    ast_Stmt * stmt;
+
+    public:
+        ast_ElseStmt(int,int,ast_Stmt *);
+        ast_ElseStmt(int,int);
+        bool isNull();
+        ast_Stmt * getStmt();
+        ~ast_ElseStmt(){};
 };
 
 class ast_WhileStmt : public ast_Stmt {
@@ -333,23 +319,15 @@ class ast_ForStmt : public ast_Stmt {
     ast_Expr * secondExpr;
     ast_Expr * thirdExpr;
 
-    bool haveFirstExpr;
-    bool haveSecondExpr; 
-    bool haveThirdExpr;
+
 
     ast_Stmt * stmt;  
 
     public:
         ast_ForStmt(int,int,ast_Expr *,ast_Expr*,ast_Expr*,ast_Stmt *);
-        ast_ForStmt(int,int,ast_Expr *,ast_Expr*,ast_Stmt *);
-        ast_ForStmt(int,int,ast_Expr *,ast_Stmt *);
-        ast_ForStmt(int,int,ast_Stmt *);
         ast_Expr * getFirstExpr();
         ast_Expr * getSecondExpr();
         ast_Expr * getThirdExpr();
-        bool getHaveFirstExpr();
-        bool getHaveSecondExpr(); 
-        bool getHaveThirdExpr();
         ast_Stmt * getStmt();
         ~ast_ForStmt(){};
 
@@ -384,25 +362,40 @@ class ast_PrintStmt : public ast_Stmt{
 };
 
 class ast_StmtBlock : public ast_Stmt {
-    vector<ast_VariableDecl *> * variableDecls;
-    vector<ast_Stmt *> * stmts;
+    vector<ast_StmtOrVariableDecl *> * content;
 
     public:
-        ast_StmtBlock(int,int,vector<ast_VariableDecl *> * ,vector<ast_Stmt *> * );
-        vector<ast_VariableDecl *> * getVariableDecls();
-        vector<ast_Stmt *> * getStmts();
+        ast_StmtBlock(int,int,vector<ast_StmtOrVariableDecl *> * );
+        vector<ast_StmtOrVariableDecl *> * getContent();
         ~ast_StmtBlock(){};
+};
+
+class ast_StmtOrVariableDecl{
+    int tipo; // Stmt = 1, VariableDecl = 2
+    ast_Stmt * stmt;
+    ast_VariableDecl * variableDecl;
+
+    public:
+        ast_StmtOrVariableDecl(ast_Stmt *);
+        ast_StmtOrVariableDecl(ast_VariableDecl *);
+        int getTipo();
+        ast_Stmt * getStmt();
+        ast_VariableDecl * getVariableDecl();
+        ~ast_StmtOrVariableDecl(){};
 };
 
 class ast_Expr {
     public:
         ast_Expr(int,int,int);//linea,columna,tipo
+        ast_Expr(); 
         int getLinea();
         int getColumna();
         int getTipoExpr();
+        bool isNull();
         ~ast_Expr(){};
 
     protected:
+        bool isNullExpr;
         int linea;
         int columna;
         int tipoExpr; // Binary = 1, Unary = 2, Read = 3, New = 4, NewArray = 5, Lvalue = 6, ast_Call = 7 , ast_Constant = 8
@@ -411,14 +404,30 @@ class ast_Expr {
 class ast_ExprBinary : public ast_Expr {
     ast_Expr * exprIzq;
     ast_Expr * exprDer;
-    TipoOperacion tipoOp;
+    int tipoOp; /*
+                tipoEql = 1
+                tipoPlus = 2
+                tipoMinus = 3
+                tipoMult = 4
+                tipoToken_div = 5
+                tipoMod = 6
+                tipoMenor = 7
+                tipoMenorEql = 8
+                tipoMayor = 9
+                tipoMayorEql = 10
+                tipoEqlEql = 11
+                tipoNEql = 12
+                tipoToken_and = 13
+                tipoToken_or = 14
+                tipoToken_not = 15
+                */
 
     
     public:
-        ast_ExprBinary(int,int,ast_Expr *,ast_Expr *, TipoOperacion);
+        ast_ExprBinary(int,int,ast_Expr *,ast_Expr *, int);
         ast_Expr * getExprIzq();
         ast_Expr * getExprDer();
-        TipoOperacion getTipoOp();
+        int getTipoOp();
         ~ast_ExprBinary(){};
 
 
@@ -426,12 +435,28 @@ class ast_ExprBinary : public ast_Expr {
 
 class ast_ExprUnary : public ast_Expr {
     ast_Expr * expresion;
-    TipoOperacion tipoOp;
+     int tipoOp; /*
+                tipoEql = 1
+                tipoPlus = 2
+                tipoMinus = 3
+                tipoMult = 4
+                tipoToken_div = 5
+                tipoMod = 6
+                tipoMenor = 7
+                tipoMenorEql = 8
+                tipoMayor = 9
+                tipoMayorEql = 10
+                tipoEqlEql = 11
+                tipoNEql = 12
+                tipoToken_and = 13
+                tipoToken_or = 14
+                tipoToken_not = 15
+                */
 
     public:
-        ast_ExprUnary(int,int,ast_Expr *, TipoOperacion);
+        ast_ExprUnary(int,int,ast_Expr *, int);
         ast_Expr * getExpresion();
-        TipoOperacion getTipoOp();
+        int getTipoOp();
         ~ast_ExprUnary(){};
 };
 
@@ -457,12 +482,12 @@ class ast_ExprNew : public ast_Expr {
 
 class ast_ExprNewArray : public ast_Expr {
     ast_Expr * expresion;
-    TipoDatos tipoDato;
+    ast_Type * tipoDato; 
 
     public:
-        ast_ExprNewArray(int,int,ast_Expr *,TipoDatos);
+        ast_ExprNewArray(int,int,ast_Expr *,ast_Type *);
         ast_Expr * getExpresion();
-        TipoDatos getTipoDatos();
+        ast_Type * getTipoDatos();
         ~ast_ExprNewArray(){};
 };
 

@@ -63,18 +63,18 @@ string ast_Variable::getString(){
 }
 
 //TYPES
-ast_Type::ast_Type(TipoDatos tipo ,bool array){
-    this->tipo=tipo;
+ast_Type::ast_Type(int numTipoDato ,bool array){
+    this->tipoDato=numTipoDato;
     this->isArray=array;
 }
-ast_Type::ast_Type(TipoDatos tipo,bool array,string ident){
-    this->tipo=tipo;
+ast_Type::ast_Type(int numTipoDato,bool array,string ident){
+    this->tipoDato=numTipoDato;
     this->isArray=array;
     this->ident=ident;
 }
 
-TipoDatos ast_Type::getTipo(){
-    return this->tipo;
+int ast_Type::getTipo(){
+    return this->tipoDato;
 }
 
 bool ast_Type::getIsArray(){
@@ -83,6 +83,10 @@ bool ast_Type::getIsArray(){
 
 string ast_Type::getIdent(){
     return this->ident;
+}
+
+void ast_Type::setIsArray(bool b){
+    this->isArray = b;
 }
 
 //ast_FunctionDecl
@@ -125,7 +129,7 @@ vector<ast_Variable *> * ast_Formals::getVariables(){
 
 //ast_ClassDecl
 
-ast_ClassDecl::ast_ClassDecl(int linea,int columna,int tipoDecl,string ident,vector<string> * extends, vector<string> * implements, vector<ast_Field *> * fields):ast_Declaracion(linea,columna,tipoDecl){
+ast_ClassDecl::ast_ClassDecl(int linea,int columna,int tipoDecl,string ident,string extends, vector<string> * implements, vector<ast_Field *> * fields):ast_Declaracion(linea,columna,tipoDecl){
     this->linea=linea;
     this->columna=columna;
     this->tipoDeclaracion=tipoDecl;
@@ -139,7 +143,7 @@ string ast_ClassDecl::getIdent(){
     return this-> ident;
 }
 
-vector<string> * ast_ClassDecl::getExtenteds(){
+string  ast_ClassDecl::getExtenteds(){
     return this-> extends;
 }
 
@@ -245,20 +249,13 @@ ast_Expr * ast_StmtBase::getExpresion(){
 
 //ast_IfStmt
 
-ast_IfStmt::ast_IfStmt(int linea,int columna,ast_Expr * expresion,ast_Stmt * stmt, ast_Stmt * elseStmt):ast_Stmt(linea,columna,2){
+ast_IfStmt::ast_IfStmt(int linea,int columna,ast_Expr * expresion,ast_Stmt * stmt, ast_ElseStmt * elseStmt):ast_Stmt(linea,columna,2){
     this->expresion = expresion;
     this->stmt = stmt;
-    this->haveElse = true;
     this->elseStmt =elseStmt;
 
 }
 
-ast_IfStmt::ast_IfStmt(int linea,int columna,ast_Expr * expresion,ast_Stmt * stmt):ast_Stmt(linea,columna,2){
-    this->expresion = expresion;
-    this->stmt = stmt;
-    this->haveElse = false;
-
-}
 
 ast_Expr * ast_IfStmt::getExpresion(){
     return this->expresion;
@@ -269,13 +266,32 @@ ast_Stmt * ast_IfStmt ::getStmt(){
     return this->stmt;
 }
 
-bool ast_IfStmt ::getHaveElse(){
-    return this->haveElse;
-}
 
-ast_Stmt * ast_IfStmt ::getElseStmt(){
+
+ast_ElseStmt * ast_IfStmt ::getElseStmt(){
     return this->elseStmt;
 }
+
+//ast_ElseStmt 
+
+ast_ElseStmt::ast_ElseStmt(int linea,int columna,ast_Stmt * stmt):ast_Stmt(linea,columna,9){
+    this->stmt = stmt;
+    this->isElseNull = false;
+}
+
+ast_ElseStmt::ast_ElseStmt(int linea,int columna):ast_Stmt(linea,columna,9){
+    this->isElseNull = true;
+}
+
+ast_Stmt * ast_ElseStmt ::getStmt(){
+    return this->stmt;
+}
+
+bool ast_ElseStmt ::isNull(){
+    return this->isElseNull;
+}
+
+
 
 //ast_WhileStmt
 
@@ -296,49 +312,11 @@ ast_Stmt * ast_WhileStmt::getStmt(){
 
 ast_ForStmt::ast_ForStmt(int linea, int columna, ast_Expr * firstExpr, ast_Expr * secondExpr,ast_Expr * thirdExpresion,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
     this->firstExpr = firstExpr;
-    this->haveFirstExpr = true;
 
     this->secondExpr = secondExpr;
-    this->haveSecondExpr = true;
+
 
     this->thirdExpr = thirdExpr;
-    this->haveThirdExpr = true;
-
-    this->stmt = stmt;
-
-}
-
-ast_ForStmt::ast_ForStmt(int linea, int columna, ast_Expr * firstExpr, ast_Expr * secondExpr,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
-    this->firstExpr = firstExpr;
-    this->haveFirstExpr = true;
-
-    this->secondExpr = secondExpr;
-    this->haveSecondExpr = true;
-
-    this->haveThirdExpr = false;
-
-    this->stmt = stmt;
-
-}
-
-ast_ForStmt::ast_ForStmt(int linea, int columna, ast_Expr * firstExpr,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
-    this->firstExpr = firstExpr;
-    this->haveFirstExpr = true;
-
-    this->haveSecondExpr = false;
-
-    this->haveThirdExpr = false;
-
-    this->stmt = stmt;
-
-}
-
-ast_ForStmt::ast_ForStmt(int linea, int columna,ast_Stmt * stmt): ast_Stmt(linea,columna,4){
-    this->haveFirstExpr = false;
-
-    this->haveSecondExpr = false;
-
-    this->haveThirdExpr = false;
 
     this->stmt = stmt;
 
@@ -356,17 +334,6 @@ ast_Expr * ast_ForStmt::getThirdExpr(){
     return this->thirdExpr;
 }
 
-bool ast_ForStmt::getHaveFirstExpr(){
-    return this->haveFirstExpr;
-}
-
-bool ast_ForStmt::getHaveSecondExpr(){
-    return this->haveSecondExpr;
-}
-
-bool ast_ForStmt::getHaveThirdExpr(){
-    return this->haveThirdExpr;
-}
 
 ast_Stmt * ast_ForStmt::getStmt(){
     return this->stmt;
@@ -411,18 +378,41 @@ vector<ast_Expr *> * ast_PrintStmt::getExpresiones(){
 
 //ast_StmtBlock
 
-ast_StmtBlock:: ast_StmtBlock(int linea, int columna,vector<ast_VariableDecl *> * variableDecls,vector<ast_Stmt *> * stmts):ast_Stmt(linea,columna,8){
-    this->variableDecls = variableDecls;
-    this->stmts = stmts; 
+ast_StmtBlock:: ast_StmtBlock(int linea, int columna,vector<ast_StmtOrVariableDecl *> * content):ast_Stmt(linea,columna,8){
+    this->content = content;
+ 
 }
 
-vector<ast_VariableDecl *> * ast_StmtBlock::getVariableDecls(){
-    return this-> variableDecls;
+vector<ast_StmtOrVariableDecl *> * ast_StmtBlock::getContent(){
+    return this-> content;
 }
 
-vector<ast_Stmt *> * ast_StmtBlock::getStmts(){
-    return this->stmts;
+//ast_StmtOrVariableDecl 
+
+ast_StmtOrVariableDecl::ast_StmtOrVariableDecl(ast_Stmt * stmt){
+    this->stmt = stmt;
+    this->tipo = 1;    
 }
+
+ast_StmtOrVariableDecl::ast_StmtOrVariableDecl(ast_VariableDecl * varDecl){
+    this->variableDecl = varDecl;
+    this->tipo = 2;    
+}
+
+int ast_StmtOrVariableDecl::getTipo(){
+    return this->tipo;    
+}
+
+ast_Stmt* ast_StmtOrVariableDecl::getStmt(){
+    return this->stmt;    
+}
+
+ast_VariableDecl * ast_StmtOrVariableDecl::getVariableDecl(){
+    return this->variableDecl;    
+}
+
+
+
 
 //ast_Expr
 
@@ -430,6 +420,15 @@ ast_Expr::ast_Expr(int linea,int columna, int tipo){
     this-> linea = linea;
     this-> columna = columna;
     this-> tipoExpr = tipo;
+    this-> isNullExpr = false;
+}
+
+ast_Expr::ast_Expr(){
+    this->isNullExpr = true;
+}
+
+bool ast_Expr::isNull(){
+    return this->isNullExpr;
 }
 
 int ast_Expr::getLinea(){
@@ -446,10 +445,11 @@ int ast_Expr::getTipoExpr(){
 
 //ast_ExprBinary
 
-ast_ExprBinary::ast_ExprBinary(int linea,int columna,ast_Expr * exprIzq, ast_Expr * exprDer, TipoOperacion tipoOp):ast_Expr(linea,columna,1){
+ast_ExprBinary::ast_ExprBinary(int linea,int columna,ast_Expr * exprIzq, ast_Expr * exprDer, int numTipoOp):ast_Expr(linea,columna,1){
+
     this->exprIzq = exprIzq;
     this->exprDer = exprDer;
-    this->tipoOp = tipoOp;
+    this->tipoOp = numTipoOp;
 }
 
 ast_Expr * ast_ExprBinary::getExprIzq(){
@@ -460,22 +460,24 @@ ast_Expr * ast_ExprBinary::getExprDer(){
     return this->exprDer;
 }
 
-TipoOperacion ast_ExprBinary::getTipoOp(){
+int ast_ExprBinary::getTipoOp(){
     return this->tipoOp;
 }
 
 //ast_ExprUnary
 
-ast_ExprUnary::ast_ExprUnary(int linea, int columna, ast_Expr * expresion,TipoOperacion tipoOp):ast_Expr(linea,columna,2){
+ast_ExprUnary::ast_ExprUnary(int linea, int columna, ast_Expr * expresion,int numTipoOp):ast_Expr(linea,columna,2){
+    
+
     this->expresion = expresion;
-    this->tipoOp= tipoOp;
+    this->tipoOp= numTipoOp;
 }
 
 ast_Expr * ast_ExprUnary::getExpresion(){
     return this->expresion;
 }
 
-TipoOperacion ast_ExprUnary::getTipoOp(){
+int ast_ExprUnary::getTipoOp(){
     return this->tipoOp;
 }
 
@@ -501,7 +503,7 @@ string ast_ExprNew::getIdent(){
 
 //ExprNewArrray
 
-ast_ExprNewArray::ast_ExprNewArray(int linea, int columna, ast_Expr * expresion, TipoDatos tipoDato):ast_Expr(linea,columna,5){
+ast_ExprNewArray::ast_ExprNewArray(int linea, int columna, ast_Expr * expresion, ast_Type * tipoDato):ast_Expr(linea,columna,5){
     this->expresion = expresion;
     this->tipoDato = tipoDato;
 }
@@ -510,7 +512,7 @@ ast_Expr * ast_ExprNewArray::getExpresion(){
     return this->expresion;
 }
 
-TipoDatos ast_ExprNewArray::getTipoDatos(){
+ast_Type * ast_ExprNewArray::getTipoDatos(){
     return this->tipoDato;
 }
 
