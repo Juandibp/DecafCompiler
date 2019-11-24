@@ -156,18 +156,19 @@ ReadInteger							{column = column + yyleng;printScannerTable(lineno,column,"rea
 
 ReadLine							{column = column + yyleng;printScannerTable(lineno,column,"readLine",""); return (readLine); }
 
-true                            {column = column + yyleng;printScannerTable(lineno,column,"boolConstant","true");  return (boolConstant); }
-false                           {column = column + yyleng;printScannerTable(lineno,column,"boolConstant","false");  return (boolConstant); }
+true                            {column = column + yyleng;printScannerTable(lineno,column,"boolConstant","true");  return (token_true); }
+false                           {column = column + yyleng;printScannerTable(lineno,column,"boolConstant","false");  return (token_false); }
 
 
 	/* Variables */
 	
 [0-9]+"."[0-9]*					 { column = column + yyleng;
-                                    printScannerTable(lineno,column,"double",yytext);
+                                    yylval.dval = atof(yytext);printScannerTable(lineno,column,"double",yytext);
 
                                     return (doubleConstant); }
 									
 [0-9]+"."[E|e][+|-][0-9]+			{ column = column + yyleng;
+                                    yylval.dval = atof(yytext);
                                     printScannerTable(lineno,column,"double",yytext);
 
                                     return (doubleConstant); }							
