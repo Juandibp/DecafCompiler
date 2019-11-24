@@ -15,6 +15,11 @@ vector<ast_Declaracion *> * ast_Programa::getDeclaraciones()
 {
     return this->declaraciones;
 }
+void ast_Programa::printTree(){
+    for (int i=0; (*this->declaraciones).size();i++){
+        cout << (*this->declaraciones).at(i) << "\n";
+    }
+}
 
 //DECLARACIOn
 
