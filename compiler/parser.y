@@ -31,9 +31,19 @@
 		/*Palabras Reservadas*/ token_void Type_int Type_double Type_bool Type_string token_class token_interface null
 								token_this token_extends token_implements token_for token_while token_if token_else
 								token_return token_break token_new token_newArray print readInteger readLine
-		 
-	               
-		           
+
+%type <Program> programa
+%type <Decl> declaracion
+%type <VariableDecl> variableDecl
+%type <Variable> variable
+%type <Type> type
+%type <FunctionDecl> functionDecl
+%type <Formals> formals
+%type <ClassDecl> classDecl
+%type <Field> field	 
+%type <InterfaceDecl> interfaceDecl	 
+%type <Prototype> prototype			               
+%type <stmtBlock> StmtBlock		           
 %type <stmt> Stmt
 %type <ifStmt> IfStmt
 %type <whileStmt> WhileStmt
