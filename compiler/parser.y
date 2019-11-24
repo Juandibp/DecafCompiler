@@ -59,7 +59,6 @@
 %type <constant> Constant
 %type <listaExpr> Expresion
 %type <listaExpr> Multi_Expresion
-%type <listaStmtOrVarDecl> StmtBlockContent
 %type <listaStmtOrVarDecl> Multi_StmtBlockContent
 %type <listaPrototype> MultiBinary_Prototype
 %type <listaIdent> Identificador
@@ -221,6 +220,7 @@ InterfaceDecl: token_interface ident ocur MultiBinary_Prototype  ccur {
 	}
 
 MultiBinary_Prototype: Prototype MultiBinary_Prototype {
+			$$ = $2;
 			$$-> push_back($1);
 		}
 	| {
@@ -236,23 +236,24 @@ Prototype : Type ident opar Formals cpar scolon {
 			printf("Prototype-> ident: %s",$2);
 		}
 
-StmtBlock : ocur StmtBlockContent  ccur {
+StmtBlock : ocur Multi_StmtBlockContent  ccur {
 		$$ = new ast_StmtBlock(lineno,column,$2);
 		printf("StmtBlock->linea: %d, columna: %d\n",lineno,column);
 
 	}
 
-StmtBlockContent : Multi_StmtBlockContent {
-		$$ = new std::vector<ast_StmtOrVariableDecl *>();
-	}
 
 Multi_StmtBlockContent : Stmt Multi_StmtBlockContent {
+			$$ = $2;
 			$$-> push_back(new ast_StmtOrVariableDecl($1)); 
 		} 
 	| VariableDecl Multi_StmtBlockContent {
+			$$ = $2;
 			$$-> push_back(new ast_StmtOrVariableDecl($1)); 
 		}
-	| 
+	| {
+		$$ = new std::vector<ast_StmtOrVariableDecl *>();
+	}
 
 
 
@@ -331,14 +332,17 @@ PrintStmt : print opar Expresion cpar scolon {
 	}
 
 Expresion: Expr Multi_Expresion {
-		$$ = new std::vector<ast_Expr *>(); 
+		$$ = $2;
 		$$->push_back($1);
 	}
 
 Multi_Expresion : comma Expr Multi_Expresion {
+			$$ = $3;
 			$$->push_back($2);
 		} 
-	|	//No agrega nada
+	|	{
+		$$ = new std::vector<ast_Expr *>(); 
+	}
 
 Expr : LValue eql Expr {
 			$$ = new ast_ExprBinary(lineno,column,$1,$3,1);
