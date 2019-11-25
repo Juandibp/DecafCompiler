@@ -1,6 +1,8 @@
 #include <iostream>
-
+#include <stdio.h>
+#include "objetos.h"
 extern int yyparse();
+extern ast_Programa * getArbol();
 /*
  * Declarations for a calculator fb3-1
  */
@@ -30,8 +32,15 @@ void treefree(struct ast *);
 
 int main(){
 	int result = yyparse();
-	if(result == 0)
+	if(result == 0){
 		std::cout << "Exito"<< std::endl;
+		ast_Programa * arbol = getArbol();
+		ScopeProgram * scopePadre = new ScopeProgram(arbol);
+
+		bool resultado = (*scopePadre).analizarArbol();
+
+		cout<< "Resultado: " << resultado << endl;
+		}
 	else
 		std::cout << "Error"<< std::endl;
 	return result;

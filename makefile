@@ -9,7 +9,8 @@ all:
 
 bison:
 	bison -d compiler/parser.y	
-
+	
+	
 flex:
 	flex compiler/scanner.l
 	

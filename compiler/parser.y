@@ -7,10 +7,13 @@
  #include <string>
  #include <vector>
  int yylex (void);
+ ast_Programa * getArbol(void);
  extern int lineno;
  extern int column;
  extern union node yylval;
  void yyerror (char const *); 
+
+ ast_Programa * arbol;
 %}
 
 
@@ -85,13 +88,15 @@
 
 %%
 Program : Decl Multi_Decl {
-	$2-> push_back($1);
+	$2-> insert($2->begin(),$1);
 	$$ = new ast_Programa($2);
+	arbol = $$;
+
 }
 
 
 Multi_Decl: Decl Multi_Decl {
-			$2-> push_back($1);
+			$2-> insert($2->begin(),$1);
 			$$ = $2;
 		}
 	|	{
@@ -151,7 +156,7 @@ FunctionDecl : Type ident opar Formals cpar StmtBlock {
 		}
 
 Formals : Variable Multi_Variable {
-			$2-> push_back($1);
+			$2-> insert($2->begin(),$1);
 			$$ = new ast_Formals($2);
 			} 
 		|	{
@@ -160,7 +165,7 @@ Formals : Variable Multi_Variable {
 
 Multi_Variable : comma Variable Multi_Variable {
 			$$ = $3;
-			$$-> push_back($2);
+			$$-> insert($$->begin(),$2);
 		}
 	|	{
 			$$ = new std::vector<ast_Variable *>();
@@ -174,7 +179,7 @@ ClassDecl : token_class ident Extends Implements ocur MultiBinary_Field  ccur {
 
 MultiBinary_Field : Field MultiBinary_Field {
 			$$ = $2;
-			$$-> push_back($1);
+			$$-> insert($$->begin(),$1);
 		} 
 	|	{
 			$$ = new std::vector<ast_Field *>();
@@ -196,12 +201,12 @@ Implements: token_implements Identificador {
 
 Identificador : ident  Multi_Identificador {
 		$$ = $2;
-		$$-> push_back($1);
+		$$-> insert($$->begin(),$1);
 	}
 
 Multi_Identificador : comma ident Multi_Identificador {
 			$$ = $3;
-			$$-> push_back($2);
+			$$->insert($$->begin(),$2);
 		} 
 	| 	{
 			$$ = new std::vector<string>();
@@ -221,7 +226,7 @@ InterfaceDecl: token_interface ident ocur MultiBinary_Prototype  ccur {
 
 MultiBinary_Prototype: Prototype MultiBinary_Prototype {
 			$$ = $2;
-			$$-> push_back($1);
+			$$-> insert($$->begin(),$1);
 		}
 	| {
 		$$ = new std::vector<ast_Prototype *>();
@@ -245,11 +250,11 @@ StmtBlock : ocur Multi_StmtBlockContent  ccur {
 
 Multi_StmtBlockContent : Stmt Multi_StmtBlockContent {
 			$$ = $2;
-			$$-> push_back(new ast_StmtOrVariableDecl($1)); 
+			$$-> insert($$->begin(),new ast_StmtOrVariableDecl($1)); 
 		} 
 	| VariableDecl Multi_StmtBlockContent {
 			$$ = $2;
-			$$-> push_back(new ast_StmtOrVariableDecl($1)); 
+			$$->insert($$->begin(),new ast_StmtOrVariableDecl($1)); 
 		}
 	| {
 		$$ = new std::vector<ast_StmtOrVariableDecl *>();
@@ -333,12 +338,12 @@ PrintStmt : print opar Expresion cpar scolon {
 
 Expresion: Expr Multi_Expresion {
 		$$ = $2;
-		$$->push_back($1);
+		$$->insert($$->begin(),$1);
 	}
 
 Multi_Expresion : comma Expr Multi_Expresion {
 			$$ = $3;
-			$$->push_back($2);
+			$$->insert($$->begin(),$2);
 		} 
 	|	{
 		$$ = new std::vector<ast_Expr *>(); 
@@ -504,4 +509,9 @@ void yyerror(char const *x){
 	 
 	printf("\nError de parsing en linea %d,columna %d",lineno,column);
 	exit(1);
+}
+
+ast_Programa * getArbol(){
+	
+	return arbol;
 }

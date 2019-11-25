@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <stdio.h>
+#include <stdlib.h>
 #include <vector>
 using namespace std;
 
@@ -50,6 +52,11 @@ class ast_StringConstant;
 class ast_NullConstant;
 class ast_StmtOrVariableDecl;
 class Nodo;
+class Scope;
+class ScopeProgram;
+class ScopeFunc;
+class ScopeClass;
+class ScopeVar;
 
 
 
@@ -649,6 +656,92 @@ class ast_NullConstant : public ast_Constant {
 	public:
 		ast_NullConstant(int,int); // linea, columna
         ~ast_NullConstant(){};
+};
+
+
+class Scope {
+    
+
+    public:
+        Scope(int,Scope *);
+        int getTipoScope();
+        Scope * getPadre();
+        vector<Scope *> * getHijos();
+        bool isScopeValido();
+        vector<string> * getErrores();
+        virtual bool identRepetido(string) = 0;
+        ~Scope(){};
+
+    protected:
+        int tipoScope;
+        Scope * padre;
+        vector<Scope *> * scopesHijos;
+        vector<string> * errores;
+        bool scopeValido;
+};
+
+class ScopeProgram : public Scope {
+    ast_Programa * programa;
+    vector<ScopeVar *> * variables;
+    vector<ScopeFunc *> * funciones;
+    vector<ScopeClass *> * clases;
+
+    public:
+        ScopeProgram(ast_Programa *);
+        ast_Programa * getPrograma();
+        vector<ScopeVar *> * getVariables();
+        vector<ScopeFunc *> * getFunciones();
+        vector<ScopeClass *> * getClases();
+        bool analizarArbol();
+        bool identRepetido(string);
+        ScopeClass * obtenerClase(string);
+        ~ScopeProgram(){};
+
+};
+
+class ScopeFunc : public Scope {
+    ast_FunctionDecl * funcion;
+    vector<ScopeVar *> * variables;
+    bool tipoExistente;
+
+
+    public:
+        ScopeFunc(Scope *,ast_FunctionDecl *);
+        ast_FunctionDecl * getFuncion();
+        vector<ScopeVar *> * getVariables();
+        bool isTipoExistente();
+        bool analizarFunc();
+        bool identRepetido(string);
+        ~ScopeFunc(){};
+
+};
+
+class ScopeClass : public Scope{
+    ast_ClassDecl * clase;
+    vector<ScopeVar *> * variables;
+    vector<ScopeFunc *> * funciones;
+    ScopeClass * clasePadre;
+        public:
+        ScopeClass(Scope *,ast_ClassDecl *);
+        ast_ClassDecl * getClase();
+        vector<ScopeVar *> * getVariables();
+        vector<ScopeFunc *> * getFunciones();
+        ScopeClass * getClasePadre();
+        bool analizarClase();
+        bool identRepetido(string);
+        ~ScopeClass(){};
+};
+
+class ScopeVar : public Scope{
+    ast_VariableDecl * variable;
+    bool tipoExistente;
+    public:
+        ScopeVar(Scope *,ast_VariableDecl *);
+        ast_VariableDecl * getVariable();
+        bool isTipoExistente();
+        bool analizarVar();
+        bool identRepetido(string);
+        ~ScopeVar(){};
 };
 
 

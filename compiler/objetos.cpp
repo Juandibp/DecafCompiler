@@ -2,8 +2,11 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <vector>
+#include <sstream>
 
 //PROGRAMA
 
@@ -16,8 +19,11 @@ vector<ast_Declaracion *> * ast_Programa::getDeclaraciones()
     return this->declaraciones;
 }
 void ast_Programa::printTree(){
-    for (int i=0; (*this->declaraciones).size();i++){
-        cout << (*this->declaraciones).at(i) << "\n";
+    for (int i=0; i<(*this->declaraciones).size();i++){
+        ast_Declaracion * declaracion = (*this->declaraciones).at(i);
+        cout<<"Linea: "<<(*declaracion).getLinea()<< endl;
+        cout<<"Columna: "<<(*declaracion).getColumna()<< endl;
+        cout<<"Tipo: "<<(*declaracion).getTipo()<< "\n\n";
     }
 }
 
@@ -689,19 +695,289 @@ ast_NullConstant::ast_NullConstant(int linea, int columna): ast_Constant(linea,c
 }
 
 
+//Scope
+
+Scope::Scope(int tipoScope,Scope * padre){
+    this->tipoScope = tipoScope;
+    this->padre-> padre;
+    this->scopeValido = true;
+    this->scopesHijos =  new std::vector<Scope *>();
+    this->errores = new std::vector<string>();
+}
+
+int Scope::getTipoScope(){
+    return this->tipoScope;
+}
+
+
+Scope * Scope::getPadre(){
+    return this->padre;
+}
+
+vector<Scope *> * Scope::getHijos(){
+    return this->scopesHijos;
+}
+
+bool Scope::isScopeValido(){
+    return this->scopeValido;
+}
+
+vector<string> * Scope::getErrores(){
+    return errores;
+}
+
+//ScopeProgram
+
+ScopeProgram::ScopeProgram(ast_Programa * programa):Scope(1,NULL){
+    this->errores =  new std::vector<string>();
+    this->variables = new std::vector<ScopeVar *>();
+    this->funciones = new std::vector<ScopeFunc *>();
+    this->clases = new std::vector<ScopeClass *>();
+    this->programa = programa;
+}
+
+ast_Programa * ScopeProgram::getPrograma(){
+    return this->programa;
+}
+
+
+vector<ScopeVar * >* ScopeProgram::getVariables(){
+    return this->variables;
+}
+
+vector<ScopeFunc *> * ScopeProgram::getFunciones(){
+    return this->funciones;
+}
+
+vector<ScopeClass *> * ScopeProgram::getClases(){
+    return this->clases;
+}
+
+bool ScopeProgram::analizarArbol(){
+    std::vector<ast_Declaracion *>  declaraciones = (*this->programa->getDeclaraciones());
+    for(int i = 0; i < declaraciones.size();i++){
+        ast_Declaracion * declaracion = declaraciones.at(i);
+
+        ast_VariableDecl * newVarDecl;
+        ScopeVar * newVariable;
+        ast_FunctionDecl * newFunDecl;
+        ScopeFunc * newFunc;
+        ast_ClassDecl * newClassDecl;
+        ScopeClass * newClass;
+        switch ((*declaracion).getTipo())
+        {
+        case 1:
+            newVarDecl = (ast_VariableDecl *) declaracion;
+            newVariable = new ScopeVar(this,newVarDecl);
+            (*this->variables).insert((*this->variables).begin(),newVariable);
+            break;
+        case 2:
+            newFunDecl = (ast_FunctionDecl *) declaracion;
+            newFunc = new ScopeFunc(this,newFunDecl);
+             (*this->funciones).insert((*this->funciones).begin(),newFunc);
+            break;
+        case 3:
+            newClassDecl = (ast_ClassDecl *) declaracion;
+            newClass = new ScopeClass(this,newClassDecl);
+             (*this->clases).insert((*this->clases).begin(),newClass);
+            break;
+        
+        default:
+            break;
+        }
+
+        for(int i = 0; i < (*this->clases).size();i++){
+            (*(*this->clases).at(i)).analizarClase();
+        }
+
+        for(int i = 0; i < (*this->funciones).size();i++){
+            (*(*this->funciones).at(i)).analizarFunc();
+        }
+
+        for(int i = 0; i < (*this->variables).size();i++){
+            (*(*this->variables).at(i)).analizarVar();
+        }
 
 
 
+        return (*this).isScopeValido();
+    }
+}
+
+bool ScopeProgram::identRepetido(string ident){
+    
+
+    for(int i = 0; i< (*this->variables).size(),i++;){
+        if((*(*this->variables).at(i)).identRepetido(ident)){
+            return true;
+        }
+    }
+
+    for(int i = 0; i< (*this->clases).size(),i++;){
+        if((*(*this->clases).at(i)).identRepetido(ident)){
+            return true;
+        }
+    }
+
+    for(int i = 0; i< (*this->funciones).size(),i++;){
+        if((*(*this->funciones).at(i)).identRepetido(ident)){
+            return true;
+        }
+    }
+
+    
+
+    return false;
+}
+
+ScopeClass * ScopeProgram::obtenerClase(string identClase){
+    for(int i = 0; i < (*this->clases).size();i++){
+        if((this->clases->at(i)->getClase()->getIdent()) == identClase){
+            return (this->clases->at(i));
+        }
+    }
+    return NULL;
+}
+
+//ScopeFunc
+
+ScopeFunc::ScopeFunc(Scope * padre, ast_FunctionDecl * funcion):Scope(2,padre){
+    this->funcion = funcion;
+    this->variables = new std::vector<ScopeVar *>();
+    this->tipoExistente = true;
+}
+
+ast_FunctionDecl * ScopeFunc::getFuncion(){
+    this->funcion;
+}
+
+vector<ScopeVar *> * ScopeFunc::getVariables(){
+    return this->variables;
+}
+
+bool ScopeFunc::isTipoExistente(){
+    return tipoExistente;
+}
+
+bool ScopeFunc::analizarFunc(){
+    return this->scopeValido;
+}
+
+bool ScopeFunc::identRepetido(string ident){
+    for(int i = 0; i< (*this->variables).size(),i++;){
+        if((*(*this->variables).at(i)).identRepetido(ident)){
+            return true;
+        }
+    }
+    if((*this->funcion).getIdent() == ident){
+        return true;
+    }
+    return false;
+}
 
 
+//ScopeClass 
+
+ScopeClass::ScopeClass(Scope * padre,ast_ClassDecl * clase): Scope(3,padre){
+    this-> clase = clase;
+    this-> variables = new std::vector<ScopeVar *>();
+    this->funciones = new std::vector<ScopeFunc *>();
+}
+
+ast_ClassDecl * ScopeClass::getClase(){
+    return clase;
+}
+
+vector<ScopeVar *> * ScopeClass::getVariables(){
+    return variables;
+}
+
+vector<ScopeFunc *> * ScopeClass::getFunciones(){
+    return funciones;
+}
+
+ScopeClass * ScopeClass :: getClasePadre(){
+    return clasePadre;
+}
+
+bool ScopeClass::analizarClase(){
+    ast_ClassDecl * clase  = (*this).getClase();
+    string ident = (*clase).getIdent();
+    scopeValido = true;
+    if((*this->padre).identRepetido(ident)){
+        std::stringstream linea;
+        linea << (*clase).getLinea();
+        std::stringstream columna;
+        columna << (*clase).getColumna();
+        
+        (*this->errores).push_back("Error : declaracion previa de " + ident + "en " + linea.str() + ":" + columna.str());
+        scopeValido = false;
+    }
+
+    string nombreClasePadre = (*clase).getExtenteds();
+    if(ident != ""){
+        if (ident != nombreClasePadre){
+            ScopeProgram * scopePadre = (ScopeProgram *) (this->padre);
+            ScopeClass * clasePadre = (*scopePadre).obtenerClase(nombreClasePadre);
+            if (clasePadre != NULL){
+                this->clasePadre = clasePadre;
+            }
+            else{
+                (*this->errores).push_back("Error : la clase " + nombreClasePadre + " no existe");
+            }
+        }
+        else {
+            (*this->errores).push_back("Error : la clase " + ident + " no puede heredar de si misma");
+            scopeValido = false;
+        }
+    }
 
 
+    return scopeValido;
+}
 
+bool ScopeClass::identRepetido(string ident){
+    for(int i = 0; i< (*this->variables).size(),i++;){
+        if((*(*this->variables).at(i)).identRepetido(ident)){
+            return true;
+        }
+    }
+    for(int i = 0; i< (*this->funciones).size(),i++;){
+        if((*(*this->funciones).at(i)).identRepetido(ident)){
+            return true;
+        }
+    }
 
+    if((*this->clase).getIdent() == ident){
+        return true;
+    }
+    return false;
+}
 
+//ScopeVar
 
+ScopeVar::ScopeVar(Scope * padre, ast_VariableDecl * variable):Scope(4,padre){
+    this->variable = variable;
 
+}
 
+ast_VariableDecl * ScopeVar::getVariable(){
+    return this->variable;
+}
 
+bool ScopeVar::isTipoExistente(){
+    return this->tipoExistente;
+}
+
+bool ScopeVar::analizarVar(){
+    return scopeValido;
+}
+
+bool ScopeVar::identRepetido(string ident){
+    if(this->variable->getVar()->getString() == ident ){
+      return true;  
+    }
+    return false;
+}
 
 
