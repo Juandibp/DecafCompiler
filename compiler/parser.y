@@ -300,7 +300,7 @@ ExprBinaria : Expr {
 			$$ = $1;
 		} 
 	| {
-		$$ = new ast_Expr();
+		
 	}
 
 IfStmt : token_if opar Expr cpar Stmt ElseStmt {

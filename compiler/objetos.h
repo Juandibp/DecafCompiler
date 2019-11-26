@@ -32,6 +32,7 @@ class ast_ReturnStmt;
 class ast_BreakStmt;
 class ast_PrintStmt;
 class ast_Expr;
+class ast_ExprSimple;
 class ast_ExprBinary;
 class ast_ExprUnary;
 class ast_ExprRead;
@@ -58,6 +59,8 @@ class ScopeProgram;
 class ScopeFunc;
 class ScopeClass;
 class ScopeVar;
+vector<string> * unirErrores(vector<string> *,vector<string> * );
+bool exiteIdent(Scope *, string);
 
 
 
@@ -325,6 +328,7 @@ class ast_IfStmt : public ast_Stmt {
         ast_Expr * getExpresion();
         ast_Stmt * getStmt();
         ast_ElseStmt * getElseStmt();
+        bool analizarStmt(Scope *);
         ~ast_IfStmt(){};
 };
 
@@ -337,6 +341,7 @@ class ast_ElseStmt : public ast_Stmt {
         ast_ElseStmt(int,int);
         bool isNull();
         ast_Stmt * getStmt();
+        bool analizarStmt(Scope *);
         ~ast_ElseStmt(){};
 };
 
@@ -348,6 +353,7 @@ class ast_WhileStmt : public ast_Stmt {
         ast_WhileStmt(int,int,ast_Expr *,ast_Stmt *);
         ast_Expr * getExpresion();
         ast_Stmt * getStmt();
+        bool analizarStmt(Scope *);
         ~ast_WhileStmt();
     
 };
@@ -367,6 +373,7 @@ class ast_ForStmt : public ast_Stmt {
         ast_Expr * getSecondExpr();
         ast_Expr * getThirdExpr();
         ast_Stmt * getStmt();
+        bool analizarStmt(Scope *);
         ~ast_ForStmt(){};
 
 };
@@ -374,12 +381,15 @@ class ast_ForStmt : public ast_Stmt {
 class ast_ReturnStmt : public ast_Stmt {
     ast_Expr * expresion;
     bool haveExpr;
+    ScopeClass * tipoRetorno;
 
     public:
         ast_ReturnStmt(int,int,ast_Expr*);
         ast_ReturnStmt(int,int);
         ast_Expr * getExpresion();
         bool getHaveExpr();
+        bool analizarStmt(Scope *);
+        ScopeClass * getTipoRetorno();
         ~ast_ReturnStmt(){};
 };
 
@@ -387,6 +397,7 @@ class ast_BreakStmt : public ast_Stmt {
 
     public:
         ast_BreakStmt(int,int);
+        bool analizarStmt(Scope *);
         ~ast_BreakStmt(){};
 };
 
@@ -396,6 +407,7 @@ class ast_PrintStmt : public ast_Stmt{
     public:
         ast_PrintStmt(int,int,vector<ast_Expr *> *);
         vector<ast_Expr *> * getExpresiones();
+        bool analizarStmt(Scope *);
         ~ast_PrintStmt();
 };
 
@@ -405,6 +417,7 @@ class ast_StmtBlock : public ast_Stmt {
     public:
         ast_StmtBlock(int,int,vector<ast_StmtOrVariableDecl *> * );
         vector<ast_StmtOrVariableDecl *> * getContent();
+        bool analizarStmt(Scope *);
         ~ast_StmtBlock(){};
 };
 
@@ -444,6 +457,14 @@ class ast_Expr {
         int tipoExpr; // Binary = 1, Unary = 2, Read = 3, New = 4, NewArray = 5, Lvalue = 6, ast_Call = 7 , ast_Constant = 8
 };
 
+class ast_ExprSimple : ast_Expr{
+    public:
+        ast_ExprSimple();
+        bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
+        ~ast_ExprSimple(){};
+};
+
 class ast_ExprBinary : public ast_Expr {
     ast_Expr * exprIzq;
     ast_Expr * exprDer;
@@ -472,6 +493,7 @@ class ast_ExprBinary : public ast_Expr {
         ast_Expr * getExprDer();
         int getTipoOp();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_ExprBinary(){};
 
 
@@ -502,6 +524,7 @@ class ast_ExprUnary : public ast_Expr {
         ast_Expr * getExpresion();
         int getTipoOp();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_ExprUnary(){};
 };
 
@@ -512,6 +535,7 @@ class ast_ExprRead : public ast_Expr {
         ast_ExprRead(int,int,int); // linea, columna , tipoRead
         int getTipoRead();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_ExprRead(){};
 };
 
@@ -522,6 +546,7 @@ class ast_ExprNew : public ast_Expr {
         ast_ExprNew(int,int,string);
         string getIdent();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_ExprNew(){};
 
 };
@@ -536,6 +561,7 @@ class ast_ExprNewArray : public ast_Expr {
         ast_Expr * getExpresion();
         ast_Type * getTipoDatos();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_ExprNewArray(){};
 };
 
@@ -546,7 +572,8 @@ class ast_LValue: public ast_Expr {
     public:
         ast_LValue(int,int,int); // linea, columna , tipoLvalue
         int getTipoLvalue();
-        virtual bool analizarExpr(Scope *) = 0;
+        virtual bool analizarExpr(Scope *) = 0;\
+        virtual ScopeClass * obtenerTipoExpr(Scope *) = 0;
         ~ast_LValue(){};
      
 };
@@ -559,6 +586,7 @@ class ast_LValueSimple : public ast_LValue {
         ast_LValueSimple(int,int,string); // linea, columna
         string getIdent();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_LValueSimple();
 };
 
@@ -571,6 +599,7 @@ class ast_LvalueExpr : public ast_LValue {
         ast_Expr * getExpr();
         string getIdent();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_LvalueExpr(){};
 
 };
@@ -585,6 +614,7 @@ class ast_LvalueArray : public ast_LValue {
         ast_Expr * getFirstExpr();
         ast_Expr * getSecondExpr();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_LvalueArray(){};
 
 };
@@ -598,6 +628,7 @@ class ast_Call: public ast_Expr {
         ast_Call(int,int,int); // linea, columna , tipoCall
         int getTipoCall();
         virtual bool analizarExpr(Scope *) = 0;
+        virtual ScopeClass * obtenerTipoExpr(Scope *) = 0;
         ~ast_Call(){};
 
 };
@@ -613,6 +644,7 @@ class ast_CallSimple : public ast_Call {
         string getIdent();
         ast_Actuals * getActuals();
         bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_CallSimple(){};
 };
 
@@ -626,6 +658,8 @@ class ast_CallExpr : public ast_Call {
         ast_Expr * getExpr();
         string getIdent();
         ast_Actuals * getActuals();
+        bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_CallExpr(){};
 };
 
@@ -647,6 +681,8 @@ class ast_Constant: public ast_Expr {
     public:
         ast_Constant(int,int,int); // linea, columna, tipoConst
         int getTipoConst();
+        bool analizarExpr(Scope *);
+        ScopeClass * obtenerTipoExpr(Scope *);
         ~ast_Constant(){};
 		
 };
@@ -747,6 +783,7 @@ class ScopeProgram : public Scope {
         bool analizarArbol();
         bool identRepetido(string);
         ScopeClass * obtenerClase(string);
+        ScopeFunc * obtenerFunc(string);
         ~ScopeProgram(){};
 
 };
@@ -767,6 +804,7 @@ class ScopeFunc : public Scope {
         bool identRepetido(string);
         ScopeClass * getTipoRetorno();
         ScopeClass * obtenerClase(string);
+        ScopeFunc * obtenerFunc(string);
         ~ScopeFunc(){};
 
 };
@@ -792,6 +830,7 @@ class ScopeClass : public Scope{
         bool existeVariable(string);
         vector<ScopeClass *> * getClasesHijas();
         bool isClaseHija(ScopeClass *);
+        ScopeFunc * obtenerFunc(string);
         ~ScopeClass(){};
 };
 
@@ -805,28 +844,32 @@ class ScopeVar : public Scope{
         bool analizarVar();
         bool identRepetido(string);
         ScopeClass * obtenerClase(string);
+        ScopeFunc * obtenerFunc(string);
         ~ScopeVar(){};
 };
 
-vector<string> * unirErrores(vector<string> * primeraLista,vector<string> * segundaLista){
+class ScopeClassInt : public ScopeClass {
 
-    for(int i = 0; i < segundaLista->size();i++){
-        primeraLista->push_back(segundaLista->at(i));
-    }
-
-    return primeraLista;
 };
 
-bool exiteIdent(Scope * scope, string ident){
-    if(scope->identRepetido(ident)){
-        return true;
-    }
-    if(scope->getPadre() != NULL){
-        return exiteIdent(scope->getPadre(),ident);
-    }
-    return false;
+class ScopeClassDouble : public ScopeClass {
+    
+};
 
-}
+class ScopeClassVoid : public ScopeClass {
+    
+};
+
+class ScopeClassString : public ScopeClass {
+    
+};
+
+class ScopeClassBool : public ScopeClass {
+    
+};
+
+
+
 
 
 

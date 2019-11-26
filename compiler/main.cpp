@@ -37,12 +37,15 @@ int main(){
 		ast_Programa * arbol = getArbol();
 		ScopeProgram * scopePadre = new ScopeProgram(arbol);
 		(*arbol).printTree();
+		cout<<"Antes" <<endl;
 		bool resultado = (*scopePadre).analizarArbol();
-
-		cout<< "Resultado: " << resultado << endl;
+		cout<<"Termine" <<endl;
+		
 		}
 	else
 		std::cout << "Error"<< std::endl;
+
+	
 	return result;
 
 }
