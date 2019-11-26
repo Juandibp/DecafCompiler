@@ -854,24 +854,45 @@ class ScopeVar : public Scope{
         ~ScopeVar(){};
 };
 
-class ScopeClassInt : public ScopeClass {
+class ScopeStmtBlock : public Scope{
+    vector<ScopeVar *> * variables;
+    ast_StmtBlock * stmtBlock;
 
+    public:
+        ScopeStmtBlock(Scope *,ast_StmtBlock *);
+        vector<ScopeVar *> * getVariables();
+        ast_StmtBlock * getStmtBlock();
+        bool identRepetido(string);
+        ScopeClass * obtenerClase(string);
+        ScopeFunc * obtenerFunc(string);
+        bool existeIdent(string);
+        ~ScopeStmtBlock(){};
+};
+
+class ScopeClassInt : public ScopeClass {
+    public:
+        ScopeClassInt();
+    
 };
 
 class ScopeClassDouble : public ScopeClass {
-    
+    public:
+        ScopeClassDouble();
 };
 
 class ScopeClassVoid : public ScopeClass {
-    
+    public:
+        ScopeClassVoid();
 };
 
 class ScopeClassString : public ScopeClass {
-    
+    public:
+        ScopeClassString();
 };
 
 class ScopeClassBool : public ScopeClass {
-    
+    public:
+        ScopeClassBool();
 };
 
 

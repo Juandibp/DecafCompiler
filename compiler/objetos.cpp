@@ -442,6 +442,10 @@ ast_Expr * ast_StmtBase::getExpresion(){
 }
 
 bool ast_StmtBase::analizarStmt(Scope * scope){
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
     if(!expresion->isNull()){
         bool resultado = expresion->analizarExpr(scope);
         if(!resultado){
@@ -449,7 +453,8 @@ bool ast_StmtBase::analizarStmt(Scope * scope){
             return false;
         }
         if(expresion->getTipoExpr() == 8){
-            
+            this->errores->push_back("Error: expresion invalida en " + linea.str() + ":"+columna.str()) ;
+            return false;
         }
     }
     return true;
@@ -486,7 +491,27 @@ bool ast_IfStmt::analizarStmt(Scope * scope){
     columna << (this->columna);
     if(expresion->isNull()){
         this->errores->push_back("Error: expresion invalida en " + linea.str() + ":"+columna.str()) ;
+        return false;
     }
+    bool resultado = expresion->analizarExpr(scope);
+        if(!resultado){
+            this->errores = unirErrores(errores,expresion->getErrores());
+            return false;
+        }
+    switch (expresion->getTipoExpr())
+    {
+    case 3:
+    case 4:
+    case 5:
+        this->errores->push_back("Error: expresion invalida en " + linea.str() + ":"+columna.str()) ;
+        return false;
+        break;
+    
+    default:
+        break;
+    }
+
+
 
     if(!(stmt->analizarStmt(scope))){
         errores = unirErrores(errores,stmt->getErrores());
@@ -521,7 +546,9 @@ bool ast_ElseStmt ::isNull(){
 }
 
 bool ast_ElseStmt ::analizarStmt(Scope * scope){
+    
     if(!isElseNull){
+    
         if(!stmt->analizarStmt(scope)){
             errores = unirErrores(errores,stmt->getErrores());
             return false;
@@ -550,10 +577,25 @@ ast_Stmt * ast_WhileStmt::getStmt(){
 
 bool ast_WhileStmt::analizarStmt(Scope * scope){
     bool resultado = true;
-
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
     if(!expresion->analizarExpr(scope)){
         resultado =false;
         errores = unirErrores(errores,expresion->getErrores());
+    }
+    switch (expresion->getTipoExpr())
+    {
+    case 3:
+    case 4:
+    case 5:
+        this->errores->push_back("Error: expresion invalida en " + linea.str() + ":"+columna.str()) ;
+        return false;
+        break;
+    
+    default:
+        break;
     }
     if(!stmt->analizarStmt(scope)){
         resultado =false;
@@ -712,14 +754,32 @@ vector<ast_StmtOrVariableDecl *> * ast_StmtBlock::getContent(){
 }
 
 bool ast_StmtBlock::analizarStmt(Scope * scope){
-
+    ScopeStmtBlock * scopeActual = new ScopeStmtBlock(scope,this);
     bool resultado = true;
+
+    for(int i = 0; i < content->size();i++){
+         ast_StmtOrVariableDecl * eso = content->at(i);
+         
+         if(eso->getTipo() == 2){
+             ScopeVar * scopeVar =  new ScopeVar(scope,eso->getVariableDecl());
+             scopeActual->getVariables()->push_back(scopeVar);
+         }
+    }
+
+    for(int i = 0; i < scopeActual->getVariables()->size();i++){
+         ScopeVar * scopeVar = scopeActual->getVariables()->at(i);
+         
+         if(!scopeVar->analizarVar()){
+             resultado = false;
+             errores = unirErrores(errores,scopeVar->getErrores());
+         }
+    }
     for(int i = 0; i < content->size();i++){
         ast_StmtOrVariableDecl * eso = content->at(i);
 
         if(eso->getTipo() == 1){
             ast_Stmt * stmt =  eso->getStmt();
-            if(!stmt->analizarStmt(scope)){
+            if(!stmt->analizarStmt(scopeActual)){
                 errores = unirErrores(errores,stmt->getErrores());
                 resultado = false;
             }
@@ -1942,6 +2002,51 @@ vector<string> * unirErrores(vector<string> * primeraLista,vector<string> * segu
     }
 
     return primeraLista;
+}
+
+ScopeStmtBlock::ScopeStmtBlock(Scope * padre,ast_StmtBlock * stmtBlock):Scope(5,padre){
+   this->variables = new vector<ScopeVar *>();
+   this->stmtBlock = stmtBlock;
+}
+
+vector<ScopeVar *> * ScopeStmtBlock::getVariables(){
+    return variables;
+}
+
+ast_StmtBlock * ScopeStmtBlock::getStmtBlock(){
+    return stmtBlock;
+}
+
+bool ScopeStmtBlock::identRepetido(string ident){
+    int cantidad = 0;
+    for(int i = 0; i< (*this->variables).size();i++){
+        if((*(*this->variables).at(i)).identRepetido(ident)){
+            cantidad++;
+        }
+    }
+    if(cantidad >1 ){
+        return true;
+    }
+    return false;
+
+}
+
+bool ScopeStmtBlock::existeIdent(string ident){
+    for(int i = 0; i< (*this->variables).size();i++){
+        if((*(*this->variables).at(i)).identRepetido(ident)){
+            return true;
+        }
+    }
+    return false;
+
+}
+
+ScopeClass * ScopeStmtBlock::obtenerClase(string identClase){
+    return this->padre->obtenerClase(identClase);
+}
+
+ScopeFunc * ScopeStmtBlock::obtenerFunc(string identFunc){
+    return this->padre->obtenerFunc(identFunc);
 }
 
 bool exiteIdent(Scope * scope, string ident){

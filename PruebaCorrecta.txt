@@ -3,14 +3,37 @@ class Zelda extends Princesa {
    bool b;
    string s;
    double d;
+  
    Princesa Princesa;
 
    void llamarALink(int a){
+      h = 5;
       int b;
-      
+      Zelda z;
+      if(b == 2){
+         int x;
+         x = 5;
+         Print ("Hola mundo");
+      }
+      else{
+        
+      }
+
+      while( h < 8){
+          h = 8;
+        int perro;
+        perro = "fiesta";
+      }
+
+      return b;
    }
 }
 
-class Princesa{
+int h;
 
+class Princesa{
+   void llamar(){
+      h = 5;
+   
+   }
 }
