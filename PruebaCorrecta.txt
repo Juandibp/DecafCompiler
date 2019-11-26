@@ -1,12 +1,16 @@
-class Hello {
+class Zelda extends Princesa {
+   int a;
+   bool b;
+   string s;
+   double d;
+   Princesa Princesa;
 
+   void llamarALink(int a){
+      int b;
+      
+   }
 }
 
-void Hello(){
+class Princesa{
 
 }
-
-Quemiedo Hello;
-
-int X;
-

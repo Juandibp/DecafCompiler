@@ -758,6 +758,7 @@ class Scope {
         virtual bool identRepetido(string) = 0;
         virtual ScopeClass * obtenerClase(string) = 0;
         virtual ScopeFunc * obtenerFunc(string) = 0;
+        virtual bool existeIdent(string) = 0;
         ~Scope(){};
 
     protected:
@@ -784,6 +785,7 @@ class ScopeProgram : public Scope {
         bool identRepetido(string);
         ScopeClass * obtenerClase(string);
         ScopeFunc * obtenerFunc(string);
+        bool existeIdent(string);
         ~ScopeProgram(){};
 
 };
@@ -793,7 +795,7 @@ class ScopeFunc : public Scope {
     vector<ScopeVar *> * variables;
     bool tipoExistente;
     ScopeClass * tipoRetorno;
-
+    vector<string> * listaParametros;
 
     public:
         ScopeFunc(Scope *,ast_FunctionDecl *);
@@ -805,6 +807,8 @@ class ScopeFunc : public Scope {
         ScopeClass * getTipoRetorno();
         ScopeClass * obtenerClase(string);
         ScopeFunc * obtenerFunc(string);
+        vector<string> * getListaParametros();
+        bool existeIdent(string);
         ~ScopeFunc(){};
 
 };
@@ -831,6 +835,7 @@ class ScopeClass : public Scope{
         vector<ScopeClass *> * getClasesHijas();
         bool isClaseHija(ScopeClass *);
         ScopeFunc * obtenerFunc(string);
+        bool existeIdent(string);
         ~ScopeClass(){};
 };
 
@@ -845,6 +850,7 @@ class ScopeVar : public Scope{
         bool identRepetido(string);
         ScopeClass * obtenerClase(string);
         ScopeFunc * obtenerFunc(string);
+        bool existeIdent(string);
         ~ScopeVar(){};
 };
 

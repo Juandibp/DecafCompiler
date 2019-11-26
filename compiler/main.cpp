@@ -41,6 +41,15 @@ int main(){
 		bool resultado = (*scopePadre).analizarArbol();
 		cout<<"Termine" <<endl;
 		
+		if(!resultado){
+			cout<<"\n\nImprimiendo errores"<<endl;
+       		for(int i = 0; i < scopePadre->getErrores()->size();i++){
+            cout<<scopePadre->getErrores()->at(i)<<endl;
+       		}
+		}
+		else{
+			cout<<"No se ha detectado ningun error"<<endl;
+		}
 		}
 	else
 		std::cout << "Error"<< std::endl;
