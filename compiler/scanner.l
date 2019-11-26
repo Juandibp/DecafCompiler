@@ -191,7 +191,7 @@ false                           {column = column + yyleng;printScannerTable(line
 ,                               {column = column + yyleng;printScannerTable(lineno,column,"comma",",");  return (comma); }
 \t
 \n                              {lineno++; column = 0;}
-" "
+" "                             {column++;}
 
 \"{CHAR}* 						{printf("String no cerrado en linea %d y columna %d\n ",lineno,column);exit(1);}
 .				                {printf("Caracter ilegal <%s> en linea %d y columna %d\n",yytext,lineno,column);exit(1);}

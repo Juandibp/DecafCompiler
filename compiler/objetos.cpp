@@ -19,11 +19,13 @@ vector<ast_Declaracion *> * ast_Programa::getDeclaraciones()
     return this->declaraciones;
 }
 void ast_Programa::printTree(){
+    printf("Programa\n");
     for (int i=0; i<(*this->declaraciones).size();i++){
         ast_Declaracion * declaracion = (*this->declaraciones).at(i);
-        cout<<"Linea: "<<(*declaracion).getLinea()<< endl;
-        cout<<"Columna: "<<(*declaracion).getColumna()<< endl;
-        cout<<"Tipo: "<<(*declaracion).getTipo()<< "\n\n";
+    
+        
+        cout<<"\t|-";
+        (*declaracion).toString(2);
     }
 }
 
@@ -59,7 +61,36 @@ ast_VariableDecl::ast_VariableDecl(int linea, int columna, int tipo,ast_Variable
 ast_Variable * ast_VariableDecl::getVar(){
     return this->var;
 }
-
+void ast_VariableDecl::toString(int cantidadTabs){
+    string tabs(cantidadTabs,'\t');
+    string ident = (this->getVar()->getString());
+    string tipo;
+    std::stringstream linea;
+    linea << this->getLinea();
+    std::stringstream columna;
+    columna <<  this->getColumna();
+     switch(this->getVar()->getTipo()->getTipo()){
+            case 1: 
+                tipo = "int";
+                break;
+            case 2: 
+                tipo = "void";
+                break;
+            case 3: 
+                tipo = "bool";
+                break;
+            case 4: 
+                tipo = "double";
+                break;
+            case 5: 
+                tipo = "string";
+                break;
+            case 6: 
+                tipo = this->getVar()->getTipo()->getIdent();
+                break;
+        }
+    cout<<"Variable: nombre->  "+ ident + " tipo-> "+tipo + " linea-> "+ linea.str() + " columna-> " + columna.str()<<endl;  
+}
 ast_Variable::ast_Variable(ast_Type* tipo, string ident){
     this->tipo=tipo;
     this->ident=ident;
@@ -73,15 +104,77 @@ string ast_Variable::getString(){
     return this->ident;
 }
 
+void ast_Variable::toString(int cantidadTabs){
+    string tabs(cantidadTabs,'\t');
+    string tipo;
+    switch(this->getTipo()->getTipo()){
+            case 1: 
+                tipo = "int";
+                break;
+            case 2: 
+                tipo = "void";
+                break;
+            case 3: 
+                tipo = "bool";
+                break;
+            case 4: 
+                tipo = "double";
+                break;
+            case 5: 
+                tipo = "string";
+                break;
+            case 6: 
+                tipo = this->getTipo()->getIdent();
+                break;
+        }
+    cout<<tabs + "|- "+ tipo + " "+ this->ident<<endl; 
+}
+
+int ast_Variable::analizarVariable(vector<string> * listaParametros, Scope * scope ){
+    ScopeClass * tipoVariable;
+    std::stringstream linea;
+    linea << (this->getTipo()->getLinea());
+    std::stringstream columna;
+    columna << (this->getTipo()->getColumna());
+
+     for(int i = 0; i < (listaParametros->size()); i++){
+        if(listaParametros->at(i) == this->ident){
+            error = "Error: declaracion previa de " +this->ident + " en " + linea.str() + ":"+columna.str() ;
+            return 1;
+        }
+    }
+
+    if(this->getTipo()->getTipo() == 6){
+        tipoVariable = scope->obtenerClase(this->getTipo()->getIdent());
+
+        if(tipoVariable == NULL){
+            error = "Error: el tipo "+ this->getTipo()->getIdent() + "no existe en " + linea.str() + ":"+columna.str() ;
+            return 2;
+        }
+    }
+
+   
+
+    error = "";
+    return 0;
+}
+
+string ast_Variable:: getError(){
+    return error;
+}
 //TYPES
-ast_Type::ast_Type(int numTipoDato ,bool array){
+ast_Type::ast_Type(int linea,int columna,int numTipoDato ,bool array){
     this->tipoDato=numTipoDato;
     this->isArray=array;
+    this->linea = linea;
+    this->columna = columna;
 }
-ast_Type::ast_Type(int numTipoDato,bool array,string ident){
+ast_Type::ast_Type(int linea,int columna,int numTipoDato,bool array,string ident){
     this->tipoDato=numTipoDato;
     this->isArray=array;
     this->ident=ident;
+     this->linea = linea;
+    this->columna = columna;
 }
 
 int ast_Type::getTipo(){
@@ -98,6 +191,14 @@ string ast_Type::getIdent(){
 
 void ast_Type::setIsArray(bool b){
     this->isArray = b;
+}
+
+int ast_Type::getLinea(){
+    return linea;
+}
+
+int ast_Type::getColumna(){
+    return columna;
 }
 
 //ast_FunctionDecl
@@ -126,6 +227,50 @@ ast_Formals * ast_FunctionDecl::getFormals(){
 
 ast_StmtBlock * ast_FunctionDecl::getStmtBlock(){
     return this->stmtBlock;
+}
+
+void ast_FunctionDecl::toString(int cantidadTabs){
+    string tabs(cantidadTabs,'\t');
+    string ident = this->ident;
+    string tipo;
+    std::stringstream linea;
+    linea << this->getLinea();
+    std::stringstream columna;
+    columna <<  this->getColumna();
+     switch(this->getTipoFuncion()->getTipo()){
+            case 1: 
+                tipo = "int";
+                break;
+            case 2: 
+                tipo = "void";
+                break;
+            case 3: 
+                tipo = "bool";
+                break;
+            case 4: 
+                tipo = "double";
+                break;
+            case 5: 
+                tipo = "string";
+                break;
+            case 6: 
+                tipo = this->getTipoFuncion()->getIdent();
+                break;
+        }
+    cout<<"Funcion: nombre->  "+ ident + " return-> "+tipo + " linea-> "+ linea.str() + " columna-> " + columna.str()<<endl; 
+
+    if(this->getFormals()->getVariables()->size() != 0){
+        cout<<tabs + "|-Parametos " <<endl ;
+        for(int i = 0; i < this->getFormals()->getVariables()->size() ; i++){
+            (*this->getFormals()->getVariables()->at(i)).toString(cantidadTabs + 1);
+        }
+    }
+
+    if(this->getStmtBlock()->getContent()->size() != 0){
+        for(int i = 0; i < this->getStmtBlock()->getContent()->size();i++){
+            (*this->getStmtBlock()->getContent()->at(i)).toString(cantidadTabs+1);
+        }
+    }
 }
 
 //ast_Formals
@@ -159,11 +304,40 @@ string  ast_ClassDecl::getExtenteds(){
 }
 
 vector<string> * ast_ClassDecl::getImplements(){
-    return this-> implements;
+    return this-> implements; 
 }
 
 vector<ast_Field *> * ast_ClassDecl::getFields(){
     return this-> fields;
+}
+
+void ast_ClassDecl::toString(int cantidadTabs){
+    string ident = this->ident;
+    string extends = "";
+    std::stringstream linea;
+    linea << this->getLinea();
+    std::stringstream columna;
+    columna <<  this->getColumna();
+
+    if(this->getExtenteds() != ""){
+        extends = " clasePadre-> "+this->getExtenteds();
+    }
+    cout<<"Clase: nombre->  "+ ident + extends + + " linea-> "+ linea.str() + " columna-> " + columna.str()<<endl; 
+}
+
+//ast_TokenClass
+
+ast_TokenClass::ast_TokenClass(int linea,int columna){
+     this->linea = linea;
+    this->columna = columna;
+}
+
+int ast_TokenClass::getLinea(){
+    return linea;
+}
+
+int ast_TokenClass::getColumna(){
+    return columna;
 }
 
 //ast_Field
@@ -208,6 +382,10 @@ vector<ast_Prototype *> * ast_InterfaceDecl::getPrototype(){
   return this->prototypes;  
 }
 
+void ast_InterfaceDecl::toString(int cantidadTabs){
+    string tabs(cantidadTabs,'\t');
+}
+
 //ast_Prototype
 
 ast_Prototype::ast_Prototype(ast_Type * tipo, string ident,ast_Formals * formals){
@@ -233,7 +411,7 @@ ast_Formals * ast_Prototype::getFormals(){
 ast_Stmt::ast_Stmt(int linea, int columna, int tipo){
     this->linea = linea;
     this->columna = columna;
-    this->tipoStmt = linea;
+    this->tipoStmt = tipo;
 }
 
 int ast_Stmt::getLinea(){
@@ -248,6 +426,10 @@ int ast_Stmt::getTipoStmt(){
     return this->tipoStmt;
 }
 
+vector<string> * ast_Stmt::getErrores(){
+    return errores;
+}
+
 //ast_StmtBase
 
 ast_StmtBase::ast_StmtBase(int linea,int columna,ast_Expr * expresion):ast_Stmt(linea,columna,1){
@@ -258,6 +440,16 @@ ast_Expr * ast_StmtBase::getExpresion(){
     return this->expresion;
 }
 
+bool ast_StmtBase::analizarStmt(Scope * scope){
+    if(!expresion->isNull()){
+        bool resultado = expresion->analizarExpr(scope);
+        if(!resultado){
+            this->errores = unirErrores(errores,expresion->getErrores());
+            return false;
+        }
+    }
+    return true;
+}
 //ast_IfStmt
 
 ast_IfStmt::ast_IfStmt(int linea,int columna,ast_Expr * expresion,ast_Stmt * stmt, ast_ElseStmt * elseStmt):ast_Stmt(linea,columna,2){
@@ -398,6 +590,7 @@ vector<ast_StmtOrVariableDecl *> * ast_StmtBlock::getContent(){
     return this-> content;
 }
 
+
 //ast_StmtOrVariableDecl 
 
 ast_StmtOrVariableDecl::ast_StmtOrVariableDecl(ast_Stmt * stmt){
@@ -422,6 +615,12 @@ ast_VariableDecl * ast_StmtOrVariableDecl::getVariableDecl(){
     return this->variableDecl;    
 }
 
+void ast_StmtOrVariableDecl::toString(int cantidadTabs){
+    string tabs(cantidadTabs,'\t');
+    if(this->tipo == 2){
+        (*this->getVariableDecl()).toString(cantidadTabs+1);
+    }
+}
 
 
 
@@ -432,6 +631,7 @@ ast_Expr::ast_Expr(int linea,int columna, int tipo){
     this-> columna = columna;
     this-> tipoExpr = tipo;
     this-> isNullExpr = false;
+    this->errores = new vector<string>();
 }
 
 ast_Expr::ast_Expr(){
@@ -454,6 +654,9 @@ int ast_Expr::getTipoExpr(){
     return this->tipoExpr;
 }
 
+vector<string> * ast_Expr::getErrores(){
+    return errores;
+}
 //ast_ExprBinary
 
 ast_ExprBinary::ast_ExprBinary(int linea,int columna,ast_Expr * exprIzq, ast_Expr * exprDer, int numTipoOp):ast_Expr(linea,columna,1){
@@ -475,6 +678,19 @@ int ast_ExprBinary::getTipoOp(){
     return this->tipoOp;
 }
 
+bool ast_ExprBinary::analizarExpr(Scope * scope){
+    if(!exprIzq->analizarExpr(scope)){
+       this->errores =  unirErrores(this->errores,exprIzq->getErrores());
+        return false;
+    }
+     if(!exprDer->analizarExpr(scope)){
+       this->errores =  unirErrores(this->errores,exprDer->getErrores());
+        return false;
+    }
+    return true;
+
+}
+
 //ast_ExprUnary
 
 ast_ExprUnary::ast_ExprUnary(int linea, int columna, ast_Expr * expresion,int numTipoOp):ast_Expr(linea,columna,2){
@@ -492,6 +708,15 @@ int ast_ExprUnary::getTipoOp(){
     return this->tipoOp;
 }
 
+bool ast_ExprUnary::analizarExpr(Scope * scope){
+     if(!expresion->analizarExpr(scope)){
+       this->errores =  unirErrores(this->errores,expresion->getErrores());
+        return false;
+    }
+
+    return true;
+}
+
 //ast_ExprRead
 
 ast_ExprRead::ast_ExprRead(int linea,int columna,int tipoRead):ast_Expr(linea,columna,3){
@@ -502,6 +727,10 @@ int ast_ExprRead::getTipoRead(){
     return tipoRead;
 }
 
+bool ast_ExprRead::analizarExpr(Scope * scope){
+    return true;
+}
+
 //ast_ExprNew
 
 ast_ExprNew::ast_ExprNew(int linea,int columna,string ident):ast_Expr(linea,columna,4){
@@ -510,6 +739,20 @@ ast_ExprNew::ast_ExprNew(int linea,int columna,string ident):ast_Expr(linea,colu
 
 string ast_ExprNew::getIdent(){
     return this->ident;
+}
+
+bool ast_ExprNew::analizarExpr(Scope * scope){
+   ScopeClass * tipoNew = scope->obtenerClase(this->ident);
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
+   if(tipoNew == NULL){
+       this->errores->push_back("Error: el tipo "+ this->ident + "no existe en " + linea.str() + ":"+columna.str()) ;
+       return false;
+   }
+   return true;
+
 }
 
 //ExprNewArrray
@@ -525,6 +768,31 @@ ast_Expr * ast_ExprNewArray::getExpresion(){
 
 ast_Type * ast_ExprNewArray::getTipoDatos(){
     return this->tipoDato;
+}
+
+bool ast_ExprNewArray::analizarExpr(Scope * scope){
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
+    if(this->tipoDato->getTipo() == 6){
+         ScopeClass * tipoNew = scope->obtenerClase(this->tipoDato->getIdent);
+
+        if(tipoNew == NULL){
+        this->errores->push_back("Error: el tipo "+ this->tipoDato->getIdent() + "no existe en " + linea.str() + ":"+columna.str()) ;
+        return false;
+         }
+   
+
+    }
+
+    bool resultado = expresion->analizarExpr(scope);
+    if(!resultado){
+        errores = unirErrores(errores,expresion->getErrores());
+        return false;
+    }
+
+    return true;
 }
 
 //Lvalue
@@ -548,6 +816,19 @@ string ast_LValueSimple::getIdent(){
     return this->ident;
 }
 
+bool ast_LValueSimple :: analizarExpr(Scope * scope){
+    bool resultado = exiteIdent(scope,this->ident);
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
+    if(!resultado){
+        this->errores->push_back("Error: el identificador"+ ident +" no     esta definido en " + linea.str() + ":"+columna.str()) ;
+        return false;
+    }
+    return true;
+}
+
 //ast_LvalueExpr
 
 ast_LvalueExpr::ast_LvalueExpr(int linea, int columna, ast_Expr * expresion, string ident):ast_LValue(linea,columna,2){
@@ -563,6 +844,27 @@ string ast_LvalueExpr::getIdent(){
     return this->ident;
 }
 
+bool ast_LvalueExpr::analizarExpr(Scope * scope){
+    bool resultado =  expresion->analizarExpr(scope);
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
+    if(!resultado){
+        errores = unirErrores(errores,expresion->getErrores());
+        return false;
+    }
+    ScopeClass * clase = expresion->obtenerTipoExpr(scope);
+   
+    if(!clase->isTipoPrimitivo &&!clase->existeVariable(this->ident)){
+            this->errores->push_back("Error: la clase "+ clase->getClase()->getIdent() + "no tiene un atributo "+this->ident+" en " + linea.str() + ":"+columna.str()) ;
+            return false;
+    }
+    
+
+    return true;
+
+}
 //ast_LvalueArray
 
 ast_LvalueArray::ast_LvalueArray(int linea, int columna,ast_Expr * firstEXpr, ast_Expr* secondExpr):ast_LValue(linea,columna,3){
@@ -578,6 +880,9 @@ ast_Expr * ast_LvalueArray::getSecondExpr(){
     return this->secondExpr;
 }
 
+bool ast_LvalueArray::analizarExpr(Scope * scope){
+    return true;
+}
 
 //ast_Call
 
@@ -588,6 +893,8 @@ ast_Call::ast_Call(int linea, int columna, int tipoCall):ast_Expr(linea,columna,
 int ast_Call::getTipoCall(){
     return this->tipoCall;
 }
+
+
 
 
 //ast_CallSimple
@@ -603,6 +910,21 @@ string ast_CallSimple::getIdent(){
 
 ast_Actuals * ast_CallSimple::getActuals(){
     return this->actuals;
+}
+
+bool ast_CallSimple::analizarExpr(Scope * scope){
+    
+    ScopeFunc * funcion = scope->obtenerFunc(ident);
+    if(funcion == NULL){
+        return false;
+    }
+    bool resultado = this->actuals->analizarActuals(scope,funcion,linea,columna);
+    if(!resultado){
+        errores = unirErrores(errores,actuals->getErrores());
+        return false;
+    }
+
+    return true;
 }
 
 //ast_CallExpr
@@ -634,6 +956,47 @@ ast_Actuals::ast_Actuals(vector<ast_Expr *> * expresiones){
 
 vector<ast_Expr *> * ast_Actuals::getExpresiones(){
     return this->expresiones;
+}
+
+bool ast_Actuals::analizarActuals(Scope * scope, ScopeFunc * funcion,int numLinea,int numColumna){
+    std::stringstream linea;
+    linea << (numLinea);
+    std::stringstream columna;
+    columna << (numColumna);
+    if(expresiones->size() == funcion->getFuncion()->getFormals()->getVariables()->size()){
+        bool parametrosCorrectos = true;
+        for(int i = 0; i < expresiones->size();i++){
+            ast_Expr * expresion = expresiones->at(i);
+            ScopeClass * tipoExpresion = (expresion->obtenerTipoExpr(scope));
+
+            ast_Variable * variable = funcion->getFuncion()->getFormals()->getVariables()->at(i);
+
+            string tipoVariable = variable->getTipo()->getIdent(); 
+
+            if(!(tipoExpresion->getClase()->getIdent() == tipoVariable)){
+                ScopeClass * claseParametro = scope->obtenerClase(tipoVariable);
+
+               if(!claseParametro->isClaseHija(tipoExpresion)){
+                   this->errores->push_back("Error: El parametro recibido no coincide con el tipo de "+ variable->getString()+ " en " + linea.str() + ":"+columna.str()) ;
+               }
+            }
+
+
+        }
+        if(!parametrosCorrectos){
+            return false;
+        }
+    }
+    else{
+        this->errores->push_back("Error:El numero de parametros no coincide con la funcion "+funcion->getFuncion()->getIdent()+" en " + linea.str() + ":"+columna.str()) ;
+        return false;
+    }
+
+    return true;
+}
+
+vector<string> * ast_Actuals::getErrores(){
+    return errores;
 }
 
 //ast_Constant
@@ -724,6 +1087,10 @@ bool Scope::isScopeValido(){
 
 vector<string> * Scope::getErrores(){
     return errores;
+}
+
+void Scope::setScopeValido(bool b){
+    this->scopeValido = b;
 }
 
 //ScopeProgram
@@ -860,6 +1227,75 @@ bool ScopeFunc::isTipoExistente(){
 }
 
 bool ScopeFunc::analizarFunc(){
+    ast_Type * tipo = this->getFuncion()->getTipoFuncion();
+    string ident = this->getFuncion()->getIdent();
+    //Verificar tipo exitente
+    if(tipo->getTipo() == 6){
+        this->tipoRetorno = this->padre->obtenerClase(tipo->getIdent());
+
+        if(tipoRetorno == NULL){
+            this->tipoExistente = false;
+        }
+        else{
+            this->tipoExistente = true;
+        }
+    }
+    //Verificar nombre repetido
+    if((*this->padre).identRepetido(ident)){
+        std::stringstream linea;
+        linea << (this->getFuncion()->getLinea());
+        std::stringstream columna;
+        columna << (this->getFuncion()->getColumna());
+        
+        (*this->errores).push_back("Error : declaracion previa de " + ident + "en " + linea.str() + ":" + columna.str());
+        scopeValido = false;
+    }
+
+    //Analizar parametros
+    std::vector<string> * listaParametros = new std::vector<string>();
+    for(int i; i < this->getFuncion()->getFormals()->getVariables()->size() ;i++){
+        ast_Variable * parametro = this->getFuncion()->getFormals()->getVariables()->at(i);
+        int resultado = parametro->analizarVariable(listaParametros,this);
+
+        if(resultado == 1){
+            this->errores->push_back(parametro->getError());
+            scopeValido = false;
+        }
+        else if (resultado == 2)
+        {
+            tipoExistente = false;
+        }
+    
+    }
+
+
+    //Pasar ast_VarDecl a ScopeVar
+
+    for(int i = 0; i < this->funcion->getStmtBlock()->getContent()->size();i++ ){
+        ast_StmtOrVariableDecl * stmtOrDecl = this->funcion->getStmtBlock()->getContent()->at(i);
+        if (stmtOrDecl->getTipo() == 2){
+            variables->push_back(new ScopeVar(this,stmtOrDecl->getVariableDecl()));
+        }
+
+    }
+
+    //Analizar variables
+    for(int i = 0; i < this->variables->size();i++){
+        ScopeVar * variable =  this->variables->at(i);
+        bool resultado = variable->analizarVar();
+        if(!resultado){
+            this->scopeValido = false;
+        }
+    }
+
+    //Falta analizar Stmts
+    for(int i = 0; i < this->funcion->getStmtBlock()->getContent()->size();i++ ){
+        ast_StmtOrVariableDecl * stmtOrDecl = this->funcion->getStmtBlock()->getContent()->at(i);
+        if (stmtOrDecl->getTipo() == 1){
+            ast_Stmt * stmt =  stmtOrDecl->getStmt();
+        }
+
+    }
     return this->scopeValido;
 }
 
@@ -873,6 +1309,14 @@ bool ScopeFunc::identRepetido(string ident){
         return true;
     }
     return false;
+}
+
+ScopeClass * ScopeFunc::getTipoRetorno(){
+    return this->tipoRetorno;
+}
+
+ScopeClass * ScopeFunc::obtenerClase(string identClase){
+    return this->padre->obtenerClase(identClase);
 }
 
 
@@ -924,6 +1368,7 @@ bool ScopeClass::analizarClase(){
             }
             else{
                 (*this->errores).push_back("Error : la clase " + nombreClasePadre + " no existe");
+                scopeValido = false;
             }
         }
         else {
@@ -932,9 +1377,43 @@ bool ScopeClass::analizarClase(){
         }
     }
 
+    //Transformar classDecl a ScopeClass
+
+    for(int i = 0; i < clase->getFields()->size(); i++){
+        ast_Field * field = clase->getFields()->at(i);
+
+        if(field->getTipoDecl() == 1){
+            this->variables->push_back(new ScopeVar(this,field->getVariableDecl()));
+        }
+        else{
+            this->funciones->push_back(new ScopeFunc(this,field->getFunctionDecl()));
+        }
+    }
+
+    //Verificar variables correctas
+    for(int i = 0; i < this->getVariables()->size() ; i++){
+       bool resultado =(* this->getVariables()->at(i)).analizarVar();
+       if(!resultado){
+           this->scopeValido = false;
+       }
+    }
+
+    //Verificar funciones correctas
+    for(int i = 0; i < this->getFunciones()->size() ; i++){
+       bool resultado = (* this->getFunciones()->at(i)).analizarFunc();
+       if(!resultado){
+           this->scopeValido = false;
+       }
+    }
+
+    
+    if(!scopeValido){
+        this->padre->setScopeValido(false);
+    }
 
     return scopeValido;
 }
+
 
 bool ScopeClass::identRepetido(string ident){
     for(int i = 0; i< (*this->variables).size(),i++;){
@@ -954,6 +1433,24 @@ bool ScopeClass::identRepetido(string ident){
     return false;
 }
 
+ScopeClass * ScopeClass::obtenerClase(string identClase){
+    return this->padre->obtenerClase(identClase);
+}
+
+bool ScopeClass::isClaseHija(ScopeClass* posibleParametro){
+     for(int i = 0; i < this->getClasesHijas()->size();i++){
+        ScopeClass * claseHija = this->getClasesHijas()->at(i);
+        if(posibleParametro->getClase()->getIdent() == claseHija->getClase()->getIdent()){
+            return true;
+        }
+        else{
+            claseHija->isClaseHija(posibleParametro);
+        }
+
+        }
+    return false;
+}
+
 //ScopeVar
 
 ScopeVar::ScopeVar(Scope * padre, ast_VariableDecl * variable):Scope(4,padre){
@@ -970,14 +1467,34 @@ bool ScopeVar::isTipoExistente(){
 }
 
 bool ScopeVar::analizarVar(){
+    ast_Variable* variable = this->getVariable()->getVar();
+    
+    scopeValido = true;
+    int resultado = variable->analizarVariable(new vector<string>(),this);
+    if(resultado == 1){
+            this->errores->push_back(variable->getError());
+            scopeValido = false;
+    }
+    else if (resultado == 2){
+            tipoExistente = false;
+        }
+
     return scopeValido;
 }
+
+
+
+       
 
 bool ScopeVar::identRepetido(string ident){
     if(this->variable->getVar()->getString() == ident ){
       return true;  
     }
     return false;
+}
+
+ScopeClass * ScopeVar::obtenerClase(string identClase){
+    return this->padre->obtenerClase(identClase);
 }
 
 

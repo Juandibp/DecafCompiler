@@ -43,6 +43,7 @@
 %type <functionDecl> FunctionDecl
 %type <formals> Formals
 %type <classDecl> ClassDecl
+%type <tokenClass> Token_Clase
 %type <field> Field	 
 %type <interfaceDecl> InterfaceDecl	 
 %type <prototype> Prototype			               
@@ -117,7 +118,7 @@ Decl : VariableDecl {
 	}
 
 VariableDecl : Variable scolon {
-		$$ = new ast_VariableDecl(lineno,column,1,$1);
+		$$ = new ast_VariableDecl($1->getTipo()->getLinea(),$1->getTipo()->getColumna(),1,$1);
 	}
 
 Variable : Type ident {
@@ -133,26 +134,28 @@ Type : TypeSimple {
 		}
 
 TypeSimple : Type_int {
-			$$ = new ast_Type(1,false);
+			$$ = new ast_Type(lineno,column-2,1,false);
 		} 
 	| Type_double {
-			$$ = new ast_Type(2,false);
+			$$ = new ast_Type(lineno,column-5,4,false);
 		} 
 	| Type_bool {
-			$$ = new ast_Type(3,false);
+			$$ = new ast_Type(lineno,column-3,3,false);
 		} 
 	| Type_string {
-			$$ = new ast_Type(4,false);
+			$$ = new ast_Type(lineno,column -5,5,false);
 		} 
 	| ident{
-			$$ = new ast_Type(1,false,$1);
+			std::string newIdent = $1;
+			int identSize = newIdent.length() -1;
+			$$ = new ast_Type(lineno,column - identSize,6,false,$1);
 		} 
 
 FunctionDecl : Type ident opar Formals cpar StmtBlock {
-			$$ = new ast_FunctionDecl(lineno,column,2,$1,$2,$4,$6);
+			$$ = new ast_FunctionDecl($1->getLinea(),$1->getColumna(),2,$1,$2,$4,$6);
 		} 
 	| token_void ident opar Formals cpar StmtBlock {
-			$$ = new ast_FunctionDecl(lineno,column,2,new ast_Type(2,false),$2,$4,$6);
+			$$ = new ast_FunctionDecl(lineno,column,2,new ast_Type(lineno,column,2,false),$2,$4,$6);
 		}
 
 Formals : Variable Multi_Variable {
@@ -173,8 +176,12 @@ Multi_Variable : comma Variable Multi_Variable {
 
 
 
-ClassDecl : token_class ident Extends Implements ocur MultiBinary_Field  ccur {
-		$$ =  new ast_ClassDecl(lineno,column,3,$2,$3,$4,$6);
+ClassDecl : Token_Clase ident Extends Implements ocur MultiBinary_Field  ccur {
+		$$ =  new ast_ClassDecl($1->getLinea(),$1->getColumna(),3,$2,$3,$4,$6);
+	}
+
+Token_Clase : token_class {
+		$$ = new ast_TokenClass(lineno ,column-4);
 	}
 
 MultiBinary_Field : Field MultiBinary_Field {
@@ -234,16 +241,16 @@ MultiBinary_Prototype: Prototype MultiBinary_Prototype {
 
 Prototype : Type ident opar Formals cpar scolon {
 			$$ = new ast_Prototype($1,$2,$4);
-			printf("Prototype-> ident: %s",$2);
+			//printf("Prototype-> ident: %s",$2);
 		}
 	| token_void ident opar Formals cpar scolon  {
-			$$ = new ast_Prototype(new ast_Type(2,false),$2,$4);
-			printf("Prototype-> ident: %s",$2);
+			$$ = new ast_Prototype(new ast_Type(lineno,column,2,false),$2,$4);
+			//printf("Prototype-> ident: %s",$2);
 		}
 
 StmtBlock : ocur Multi_StmtBlockContent  ccur {
 		$$ = new ast_StmtBlock(lineno,column,$2);
-		printf("StmtBlock->linea: %d, columna: %d\n",lineno,column);
+		//printf("StmtBlock->linea: %d, columna: %d\n",lineno,column);
 
 	}
 
@@ -264,7 +271,7 @@ Multi_StmtBlockContent : Stmt Multi_StmtBlockContent {
 
 Stmt :  ExprBinaria scolon {
 			$$ = new ast_StmtBase(lineno,column,$1);
-			printf("StmtBase->linea: %d, columna: %d\n",lineno,column);
+			//printf("StmtBase->linea: %d, columna: %d\n",lineno,column);
 		}  
 	| IfStmt {
 			$$ = $1;
@@ -298,42 +305,42 @@ ExprBinaria : Expr {
 
 IfStmt : token_if opar Expr cpar Stmt ElseStmt {
 		$$ = new ast_IfStmt(lineno,column,$3,$5,$6);
-		printf("IfStmt->linea: %d, columna: %d\n",lineno,column);
+		//printf("IfStmt->linea: %d, columna: %d\n",lineno,column);
 	}
 
 ElseStmt : token_else Stmt {
 			$$ = new ast_ElseStmt(lineno,column,$2);
-			printf("ElseStmt->linea: %d, columna: %d\n",lineno,column); 
+			//printf("ElseStmt->linea: %d, columna: %d\n",lineno,column); 
 		} 
 	|	{
 			$$ = new ast_ElseStmt(lineno,column);
-			printf("ElseStmt-> No existe"); 
+			//printf("ElseStmt-> No existe"); 
 		} 
 
 WhileStmt : token_while opar Expr cpar Stmt {
 		$$ = new ast_WhileStmt(lineno,column,$3,$5);
-		printf("WhileStmt->linea: %d, columna: %d\n",lineno,column);
+		//printf("WhileStmt->linea: %d, columna: %d\n",lineno,column);
 	}
 
 ForStmt : token_for opar ExprBinaria scolon ExprBinaria scolon ExprBinaria cpar Stmt {
 		$$ = new ast_ForStmt(lineno,column,$3,$5,$7,$9);
-		printf("ForStmt->linea: %d, columna: %d\n",lineno,column);
+		//printf("ForStmt->linea: %d, columna: %d\n",lineno,column);
 	}
 
 ReturnStmt : token_return ExprBinaria scolon {
 		$$ = new ast_ReturnStmt(lineno,column,$2);
-		printf("ReturnStmt->linea: %d, columna: %d \n",lineno,column);
+		//printf("ReturnStmt->linea: %d, columna: %d \n",lineno,column);
 	}
 
 
 BreakStmt : token_break scolon {
 		$$ = new ast_BreakStmt(lineno,column);
-		printf("BreakStmt->linea: %d, columna: %d\n",lineno,column);
+		//printf("BreakStmt->linea: %d, columna: %d\n",lineno,column);
 	}
 
 PrintStmt : print opar Expresion cpar scolon {
 		$$ = new ast_PrintStmt(lineno,column,$3);
-		printf("PrintStmt->linea: %d, columna: %d\n",lineno,column);
+		//printf("PrintStmt->linea: %d, columna: %d\n",lineno,column);
 	}
 
 Expresion: Expr Multi_Expresion {
@@ -351,7 +358,7 @@ Multi_Expresion : comma Expr Multi_Expresion {
 
 Expr : LValue eql Expr {
 			$$ = new ast_ExprBinary(lineno,column,$1,$3,1);
-			printf("ExprBinary->linea: %d, columna: %d, tipoOp: eql",lineno,column);
+			//printf("ExprBinary->linea: %d, columna: %d, tipoOp: eql",lineno,column);
 		}
 	 | Constant {
 		 	$$ = $1;
@@ -370,144 +377,144 @@ Expr : LValue eql Expr {
 	 	} 
 	 |Expr token_plus Expr {
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,2);
-			 printf("ExprBinary->linea: %d, columna: %d, tipoOp: plus\n",lineno,column);
+			 //printf("ExprBinary->linea: %d, columna: %d, tipoOp: plus\n",lineno,column);
 	 	} 
 	 | Expr token_minus Expr {
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,3);
-			 printf("ExprBinary->linea: %d, columna: %d, tipoOp: minus\n",lineno,column);
+			 //printf("ExprBinary->linea: %d, columna: %d, tipoOp: minus\n",lineno,column);
 	 	}
 	 | Expr mult Expr {
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,4);
-			 printf("ExprBinary->linea: %d, columna: %d, tipoOp: mult\n",lineno,column);
+			 //printf("ExprBinary->linea: %d, columna: %d, tipoOp: mult\n",lineno,column);
 	 	} 
 	 | Expr token_div Expr{
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,5);
-			 printf("ExprBinary->linea: %d, columna: %d, tipoOp: div\n",lineno,column);
+			 //printf("ExprBinary->linea: %d, columna: %d, tipoOp: div\n",lineno,column);
 	 	} 
 	 |Expr mod Expr {
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,6);
-			 printf("ExprBinary->linea: %d, columna: %d, tipoOp: mod\n",lineno,column);
+			 //printf("ExprBinary->linea: %d, columna: %d, tipoOp: mod\n",lineno,column);
 	 	} 
 	 | token_minus Expr {
 		 	$$ = new ast_ExprUnary(lineno,column,$2,3);
-			 printf("ExprUnary->linea: %d, columna: %d, tipoOp: minus\n",lineno,column);
+			 //printf("ExprUnary->linea: %d, columna: %d, tipoOp: minus\n",lineno,column);
 	 	} 
 	 | Expr menor Expr {
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,7);
-			printf("ExprBinary->linea: %d, columna: %d, tipoOp: menor\n",lineno,column);
+			//printf("ExprBinary->linea: %d, columna: %d, tipoOp: menor\n",lineno,column);
 	 	} 
 	 | Expr menorEql Expr {
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,8);
-			 printf("ExprBinary->linea: %d, columna: %d, tipoOp: menorEql\n",lineno,column);
+			 //printf("ExprBinary->linea: %d, columna: %d, tipoOp: menorEql\n",lineno,column);
 	 	} 
 	 |Expr mayor Expr {
 		 	$$ = new ast_ExprBinary(lineno,column,$1,$3,9);
-			 printf("ExprBinary->linea: %d, columna: %d, tipoOp: mayor\n",lineno,column);
+			 //printf("ExprBinary->linea: %d, columna: %d, tipoOp: mayor\n",lineno,column);
 	 	} 
 	| Expr mayorEql Expr {
 			$$ = new ast_ExprBinary(lineno,column,$1,$3,10);
-			printf("ExprBinary->linea: %d, columna: %d, tipoOp: mayorEql\n",lineno,column);
+			//printf("ExprBinary->linea: %d, columna: %d, tipoOp: mayorEql\n",lineno,column);
 		} 
 	| Expr eqlEql Expr {
 			$$ = new ast_ExprBinary(lineno,column,$1,$3,11);
-			printf("ExprBinary->linea: %d, columna: %d, tipoOp: eqlEql\n",lineno,column);	
+			//printf("ExprBinary->linea: %d, columna: %d, tipoOp: eqlEql\n",lineno,column);	
 		} 
 	| Expr nEql Expr {
 			$$ = new ast_ExprBinary(lineno,column,$1,$3,12);
-			printf("ExprBinary->linea: %d, columna: %d, tipoOp: nEql\n",lineno,column);
+			//printf("ExprBinary->linea: %d, columna: %d, tipoOp: nEql\n",lineno,column);
 		} 
 	|Expr token_and Expr {
 			$$ = new ast_ExprBinary(lineno,column,$1,$3,13);
-			printf("ExprBinary->linea: %d, columna: %d, tipoOp: and\n",lineno,column);
+			//printf("ExprBinary->linea: %d, columna: %d, tipoOp: and\n",lineno,column);
 		} 
 	| Expr token_or Expr {
 			$$ = new ast_ExprBinary(lineno,column,$1,$3,14);
-			printf("ExprBinary->linea: %d, columna: %d, tipoOp: or\n",lineno,column);
+			//printf("ExprBinary->linea: %d, columna: %d, tipoOp: or\n",lineno,column);
 		} 
 	|  token_not Expr {
 			$$ = new ast_ExprUnary(lineno,column,$2,15);
-			printf("ExprUnary->linea: %d, columna: %d, tipoOp: not\n",lineno,column);
+			//printf("ExprUnary->linea: %d, columna: %d, tipoOp: not\n",lineno,column);
 		} 
 	| readInteger opar cpar {
 			$$ = new ast_ExprRead(lineno,column,2);
-			printf("ExprRead->linea: %d, columna: %d, tipoRead: Integer\n",lineno,column);
+			//printf("ExprRead->linea: %d, columna: %d, tipoRead: Integer\n",lineno,column);
 		} 
 	|readLine opar cpar {
 			$$ = new ast_ExprRead(lineno,column,1);
-			printf("ExprRead->linea: %d, columna: %d, tipoRead: Line\n",lineno,column);
+			//printf("ExprRead->linea: %d, columna: %d, tipoRead: Line\n",lineno,column);
 		} 
 	| token_new opar ident cpar {
 			$$ = new ast_ExprNew(lineno,column,$3);
-			printf("ExprNew->linea: %d, columna: %d, ident: %s\n",lineno,column,$3);
+			//printf("ExprNew->linea: %d, columna: %d, ident: %s\n",lineno,column,$3);
 		} 
 	| token_newArray opar Expr comma Type cpar {
 			$$ = new ast_ExprNewArray(lineno,column,$3,$5);
-			printf("ExprNewArray->linea: %d, columna: %d\n",lineno,column);
+			//printf("ExprNewArray->linea: %d, columna: %d\n",lineno,column);
 		}
 
 LValue : ident {
 				$$ = new ast_LValueSimple(lineno,column,$1);
-				printf("LValueSimple->linea: %d, columna: %d, ident: %s\n",lineno,column,$1);
+				//printf("LValueSimple->linea: %d, columna: %d, ident: %s\n",lineno,column,$1);
 			}
 		| Expr punto ident{
 				$$ = new ast_LvalueExpr(lineno,column,$1,$3);
-				printf("LvalueExpr->linea: %d, columna: %d, ident: %s\n",lineno,column,$3);
+				//printf("LvalueExpr->linea: %d, columna: %d, ident: %s\n",lineno,column,$3);
 			} 
 		| Expr osqu Expr csqu {
 				$$ = new ast_LvalueArray(lineno,column,$1,$3);
-				printf("LvalueArray->linea: %d, columna: %d\n",lineno,column);
+				//printf("LvalueArray->linea: %d, columna: %d\n",lineno,column);
 			}
 
 Call : ident opar Actuals cpar {
 			$$ = new ast_CallSimple(lineno,column,$1,$3);
-			printf("CallSimple-> linea: %d, columna: %d, ident: %s\n",lineno,column,$1);
+			//printf("CallSimple-> linea: %d, columna: %d, ident: %s\n",lineno,column,$1);
 			
 		} 
 	| Expr punto ident opar Actuals cpar {
 			$$ = new ast_CallExpr(lineno,column,$1,$3,$5);
-			printf("CallExpr-> linea: %d, columna: %d, ident: %s\n",lineno,column,$3);
+			//printf("CallExpr-> linea: %d, columna: %d, ident: %s\n",lineno,column,$3);
 		}
 
 
 Actuals : Expresion {
 				$$ = new ast_Actuals($1);
-				printf("Actuals-> una expr o +\n");
+				//printf("Actuals-> una expr o +\n");
 			} 
 		| {
 			$$ = new ast_Actuals(new std::vector<ast_Expr *>());
-			printf("Actuals-> vacio\n");
+			//printf("Actuals-> vacio\n");
 		}
 
 Constant : intConstant {
 	$$ = new ast_IntConstant(lineno,column,$1);
-	printf("intContant-> linea: %d, columna: %d, valor: %d\n",lineno,column,$1);
+	//printf("intContant-> linea: %d, columna: %d, valor: %d\n",lineno,column,$1);
 	}
 	| doubleConstant {
 		$$ = new ast_DoubleConstant(lineno,column,$1);
-	printf("doubleConstant-> linea: %d, columna: %d, valor: %f\n",lineno,column,$1);
+	//printf("doubleConstant-> linea: %d, columna: %d, valor: %f\n",lineno,column,$1);
 	}
 	| token_true {
 		$$ = new ast_BoolConstant(lineno,column,true);
-	printf("boolConstant-> linea: %d, columna: %d, valor: true\n",lineno,column);
+	//printf("boolConstant-> linea: %d, columna: %d, valor: true\n",lineno,column);
 	}
 	| token_false {
 		$$ = new ast_BoolConstant(lineno,column,false);
-	printf("boolConstant-> linea: %d, columna: %d, valor: false\n",lineno,column);
+	//printf("boolConstant-> linea: %d, columna: %d, valor: false\n",lineno,column);
 	}
 	| stringConstant {
 		$$ = new ast_StringConstant(lineno,column,$1);
-	printf("stringConstant-> linea: %d, columna: %d, valor: %s\n",lineno,column,$1);
+	//printf("stringConstant-> linea: %d, columna: %d, valor: %s\n",lineno,column,$1);
 	}
 	| null {
 		$$ = new ast_NullConstant(lineno,column);
-	printf("null-> linea: %d, columna: %d\n",lineno,column);
+	//printf("null-> linea: %d, columna: %d\n",lineno,column);
 	}
 
 %%
 
 void yyerror(char const *x){
 	 
-	printf("\nError de parsing en linea %d,columna %d",lineno,column);
+	//printf("\nError de parsing en linea %d,columna %d",lineno,column);
 	exit(1);
 }
 

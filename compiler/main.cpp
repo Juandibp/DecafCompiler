@@ -36,7 +36,7 @@ int main(){
 		std::cout << "Exito"<< std::endl;
 		ast_Programa * arbol = getArbol();
 		ScopeProgram * scopePadre = new ScopeProgram(arbol);
-
+		(*arbol).printTree();
 		bool resultado = (*scopePadre).analizarArbol();
 
 		cout<< "Resultado: " << resultado << endl;

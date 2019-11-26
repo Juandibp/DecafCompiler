@@ -1,14 +1,19 @@
-class Hello {
- void main() {
+class Hello extends Zeus {
+   int a;
+ void main(int a) {
     if(x = 5){}
      
  }
 
 }
 
-int main(){
-
+   Casas main(int i,double d,string s,bool b, sirParametro ident){
+      
 }
 
-int x;
+     NuevaClase x;
+
+class NuevaClase extends Jesus{
+   
+}
 
