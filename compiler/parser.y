@@ -21,7 +21,7 @@
 %union {
   int ival;
   double dval;
-  char *sval ;
+  string sval ;
   
 }
 
@@ -41,6 +41,7 @@
 %type <variable> Variable
 %type <type> Type
 %type <functionDecl> FunctionDecl
+%type <tokenClass> Token_Void;
 %type <formals> Formals
 %type <classDecl> ClassDecl
 %type <tokenClass> Token_Clase
@@ -154,9 +155,14 @@ TypeSimple : Type_int {
 FunctionDecl : Type ident opar Formals cpar StmtBlock {
 			$$ = new ast_FunctionDecl($1->getLinea(),$1->getColumna(),2,$1,$2,$4,$6);
 		} 
-	| token_void ident opar Formals cpar StmtBlock {
-			$$ = new ast_FunctionDecl(lineno,column,2,new ast_Type(lineno,column,2,false),$2,$4,$6);
+	| Token_Void ident opar Formals cpar StmtBlock {
+			$$ = new ast_FunctionDecl($1->getLinea(),$1->getColumna(),2,new ast_Type(lineno,column,2,false),$2,$4,$6);
 		}
+
+Token_Void : token_void {
+		$$ = new ast_TokenClass(lineno ,column-3);
+	}
+
 
 Formals : Variable Multi_Variable {
 			$2-> insert($2->begin(),$1);

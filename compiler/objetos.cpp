@@ -1285,9 +1285,8 @@ ast_NullConstant::ast_NullConstant(int linea, int columna): ast_Constant(linea,c
 //Scope
 
 Scope::Scope(int tipoScope,Scope * padre){
-    cout<<padre->getTipoScope()<<endl;
     this->tipoScope = tipoScope;
-    this->padre-> padre;
+    this->padre = padre;
     this->scopeValido = true;
     this->scopesHijos =  new std::vector<Scope *>();
     this->errores = new std::vector<string>();
@@ -1347,9 +1346,7 @@ vector<ScopeClass *> * ScopeProgram::getClases(){
 
 bool ScopeProgram::analizarArbol(){
     std::vector<ast_Declaracion *>  declaraciones = (*this->programa->getDeclaraciones());
-    cout<<"Dentro"<<endl;
     for(int i = 0; i < declaraciones.size();i++){
-        cout<<"Ciclo "<<endl;
         ast_Declaracion * declaracion = declaraciones.at(i);
 
         ast_VariableDecl * newVarDecl;
@@ -1367,6 +1364,7 @@ bool ScopeProgram::analizarArbol(){
             break;
         case 2:
             newFunDecl = (ast_FunctionDecl *) declaracion;
+            
             newFunc = new ScopeFunc(this,newFunDecl);
              (*this->funciones).insert((*this->funciones).begin(),newFunc);
             break;
@@ -1379,55 +1377,87 @@ bool ScopeProgram::analizarArbol(){
             
             break;
         }
-
-        for(int j = 0; j < (*this->clases).size();j++){
-            ScopeClass * clase = clases->at(j);
-            if(clase->analizarClase()){
-
-            }
-        }
-
-        for(int m = 0; m < (*this->funciones).size();m++){
-            
-        }
-
-        for(int n = 0; n < (*this->variables).size();n++){
-            
-        }
+       
 
 
 
        
     }
+
+     cout<<"Analizando clases "<<endl;
+        for(int j = 0; j < (*this->clases).size();j++){
+            ScopeClass * clase = clases->at(j);
+            cout<<"Analizando clase "<<clase->getClase()->getIdent()<<endl;
+            if(clase->analizarClase()){
+                cout<<"Formato de clase correcto"<<endl;
+            }
+            else{
+                cout<<"Formato de clase inccorrecto"<<endl;
+                this->errores = unirErrores(errores,clase->getErrores());
+            }
+        }
+        cout<<"Analizando funciones "<<endl;
+        
+        for(int m = 0; m < (*this->funciones).size();m++){
+            ScopeFunc * funcion = funciones->at(m);
+            cout<<"Analizando funcion "<<funcion->getFuncion()->getIdent()<<endl;
+             if(funcion->analizarFunc()){
+                cout<<"Formato de funcion correcto"<<endl;
+            }
+            else{
+                cout<<"Formato de funcion inccorrecto"<<endl;
+                this->errores = unirErrores(errores,funcion->getErrores());
+            }
+            
+        }
+        cout<<"Analizando variables "<<endl;
+        for(int n = 0; n < (*this->variables).size();n++){
+            ScopeVar * variable = variables->at(n);
+            cout<<"Analizando variable "<<variables->at(n)->getVariable()->getVar()->getString()<<endl;
+             if(variable->analizarVar()){
+                cout<<"Formato de variable correcto"<<endl;
+            }
+            else{
+                cout<<"Formato de variable inccorrecto"<<endl;
+                this->errores = unirErrores(errores,variable->getErrores());
+            }
+
+        }
+        cout<<"Imprimiendo errores"<<endl;
+        for(int i = 0; i < errores->size();i++){
+            cout<<errores->at(i)<<endl;
+        }
     return true;
 }
 
 bool ScopeProgram::identRepetido(string ident){
-    
-    cout<<"Hola que hace"<<endl;
-    for(int i = 0; i< (*this->variables).size(),i++;){
+    int contador = 0;
+    for(int i = 0; i< this->variables->size();i++){
         ScopeVar * variable = this->variables->at(i);
+          
+    
         if(variable->getVariable()->getVar()->getString() == ident){
-            return true;
+            contador++;
         }
     }
-
-    for(int i = 0; i< (*this->clases).size(),i++;){
+    for(int i = 0; i< this->clases->size();i++){
+      
         ScopeClass * clase = clases->at(i);
         if(clase->getClase()->getIdent() == ident){
-            return true;
+             contador++;
         }
     }
-
-    for(int i = 0; i< (*this->funciones).size(),i++;){
+    for(int i = 0; i< (*this->funciones).size();i++){
         ScopeFunc * funcion = funciones->at(i);
         if(funcion->getFuncion()->getIdent() == ident){
-            return true;
+             contador++;
         }
     }
 
     
-
+    if(contador > 1){
+        return true;
+    }
     return false;
 }
 
@@ -1452,13 +1482,15 @@ ScopeFunc * ScopeProgram::obtenerFunc(string identFunc){
 //ScopeFunc
 
 ScopeFunc::ScopeFunc(Scope * padre, ast_FunctionDecl * funcion):Scope(2,padre){
+    
     this->funcion = funcion;
+   
     this->variables = new std::vector<ScopeVar *>();
     this->tipoExistente = true;
 }
 
 ast_FunctionDecl * ScopeFunc::getFuncion(){
-    this->funcion;
+    return this->funcion;
 }
 
 vector<ScopeVar *> * ScopeFunc::getVariables(){
@@ -1472,6 +1504,10 @@ bool ScopeFunc::isTipoExistente(){
 bool ScopeFunc::analizarFunc(){
     ast_Type * tipo = this->getFuncion()->getTipoFuncion();
     string ident = this->getFuncion()->getIdent();
+    std::stringstream linea;
+        linea << (this->getFuncion()->getLinea());
+        std::stringstream columna;
+        columna << (this->getFuncion()->getColumna());
     //Verificar tipo exitente
     if(tipo->getTipo() == 6){
         this->tipoRetorno = this->padre->obtenerClase(tipo->getIdent());
@@ -1485,12 +1521,8 @@ bool ScopeFunc::analizarFunc(){
     }
     //Verificar nombre repetido
     if((*this->padre).identRepetido(ident)){
-        std::stringstream linea;
-        linea << (this->getFuncion()->getLinea());
-        std::stringstream columna;
-        columna << (this->getFuncion()->getColumna());
         
-        (*this->errores).push_back("Error : declaracion previa de " + ident + "en " + linea.str() + ":" + columna.str());
+        (*this->errores).push_back("Error : declaracion previa de " + ident + " en " + linea.str() + ":" + columna.str());
         scopeValido = false;
     }
 
@@ -1543,7 +1575,7 @@ bool ScopeFunc::analizarFunc(){
 }
 
 bool ScopeFunc::identRepetido(string ident){
-    for(int i = 0; i< (*this->variables).size(),i++;){
+    for(int i = 0; i< (*this->variables).size();i++){
         if((*(*this->variables).at(i)).identRepetido(ident)){
             return true;
         }
@@ -1595,25 +1627,23 @@ ScopeClass * ScopeClass :: getClasePadre(){
 }
 
 bool ScopeClass::analizarClase(){
-    cout<<"Entre analizar clase"<<endl;
-    cout<<"Nombre padre : "<< padre->getTipoScope()<<endl;
+    std::stringstream linea;
+    linea << (this->getClase()->getLinea());
+    std::stringstream columna;
+    columna << (this->getClase()->getColumna());
     ast_ClassDecl * clase  = (*this).getClase();
     string ident = (*clase).getIdent();
     scopeValido = true;
-    
     if(this->padre->identRepetido(ident)){
-        
-         cout<<"Antes agregar error"<<endl;
-        (*this->errores).push_back("Error : declaracion previa de " + ident + "en ");
+        (*this->errores).push_back("Error : declaracion previa de " + ident + " en " + linea.str() + ":" +columna.str());
 
-         cout<<"Despues agregar"<<endl;
         scopeValido = false;
     }
 
-    cout<<"Analice nombre no reperido"<<endl;
 
     string nombreClasePadre = (*clase).getExtenteds();
-    if(ident != ""){
+   
+    if(nombreClasePadre != ""){
         if (ident != nombreClasePadre){
             ScopeProgram * scopePadre = (ScopeProgram *) (this->padre);
             ScopeClass * clasePadre = (*scopePadre).obtenerClase(nombreClasePadre);
@@ -1631,7 +1661,6 @@ bool ScopeClass::analizarClase(){
         }
     }
 
-    cout<<"Analice clase padre"<<endl;
 
     //Transformar classDecl a ScopeClass
 
@@ -1645,7 +1674,6 @@ bool ScopeClass::analizarClase(){
             this->funciones->push_back(new ScopeFunc(this,field->getFunctionDecl()));
         }
     }
-    cout<<"Transformar classDecl a ScopeClass"<<endl;
     //Verificar variables correctas
     for(int i = 0; i < this->getVariables()->size() ; i++){
        bool resultado =(* this->getVariables()->at(i)).analizarVar();
@@ -1654,7 +1682,6 @@ bool ScopeClass::analizarClase(){
        }
     }
 
-    cout<<"Verificar variables correctas"<<endl;
 
     //Verificar funciones correctas
     for(int i = 0; i < this->getFunciones()->size() ; i++){
@@ -1664,7 +1691,7 @@ bool ScopeClass::analizarClase(){
        }
     }
 
-     cout<<"Verificar funciones correctas"<<endl;
+    
 
     
     if(!scopeValido){
@@ -1676,12 +1703,12 @@ bool ScopeClass::analizarClase(){
 
 
 bool ScopeClass::identRepetido(string ident){
-    for(int i = 0; i< (*this->variables).size(),i++;){
+    for(int i = 0; i< (*this->variables).size();i++){
         if((*(*this->variables).at(i)).identRepetido(ident)){
             return true;
         }
     }
-    for(int i = 0; i< (*this->funciones).size(),i++;){
+    for(int i = 0; i< (*this->funciones).size();i++){
         if((*(*this->funciones).at(i)).identRepetido(ident)){
             return true;
         }
@@ -1777,8 +1804,16 @@ bool ScopeVar::isTipoExistente(){
 
 bool ScopeVar::analizarVar(){
     ast_Variable* variable = this->getVariable()->getVar();
-    
     scopeValido = true;
+    std::stringstream linea;
+    linea << (this->getVariable()->getLinea());
+    std::stringstream columna;
+    columna << (this->getVariable()->getColumna());
+
+    if(this->padre->identRepetido(variable->getString())){
+        (*this->errores).push_back("Error : declaracion previa de " + variable->getString() + " en " + linea.str() + ":" +columna.str());
+        scopeValido = false;
+    }
     int resultado = variable->analizarVariable(new vector<string>(),this);
     if(resultado == 1){
             this->errores->push_back(variable->getError());
