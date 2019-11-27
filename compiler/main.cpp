@@ -36,10 +36,10 @@ int main(){
 		std::cout << "Exito"<< std::endl;
 		ast_Programa * arbol = getArbol();
 		ScopeProgram * scopePadre = new ScopeProgram(arbol);
-		(*arbol).printTree();
-		cout<<"Antes" <<endl;
+		
+
 		bool resultado = (*scopePadre).analizarArbol();
-		cout<<"Termine" <<endl;
+	
 		
 		if(!resultado){
 			cout<<"\n\nImprimiendo errores"<<endl;

@@ -555,7 +555,7 @@ bool ast_IfStmt::analizarStmt(Scope * scope){
     }
 
 
-    cout<<"Tipo stmt if"<<stmt->getLinea()<<endl;
+  
     if(!(stmt->analizarStmt(scope))){
         errores = unirErrores(errores,stmt->getErrores());
         stmtCorrecto = false;
@@ -1419,12 +1419,16 @@ ast_Actuals * ast_CallSimple::getActuals(){
 }
 
 bool ast_CallSimple::analizarExpr(Scope * scope){
-    
+     std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
     ScopeFunc * funcion = scope->obtenerFunc(ident);
     if(funcion == NULL){
+        this->errores->push_back("Error: la funcion "+ident+" no existe en " + linea.str() + ":"+columna.str()) ;
         return false;
     }
-    bool resultado = this->actuals->analizarActuals(scope,funcion,linea,columna);
+    bool resultado = this->actuals->analizarActuals(scope,funcion,this->linea,this->columna);
     if(!resultado){
         errores = unirErrores(errores,actuals->getErrores());
         return false;
@@ -1497,14 +1501,14 @@ bool ast_CallExpr::analizarExpr(Scope * scope){
          return false;
         }
         ScopeFunc * funcion = tipoExpresion->obtenerFunc(ident);
-        cout<<"Analizar parametros"<<endl;
+    
         bool resultado = this->actuals->analizarActuals(scope,funcion,this->linea,this->columna);
         if(!resultado){
             errores = unirErrores(errores,actuals->getErrores());
-            cout<<"Cantidad errores actuals"<<actuals->getErrores()->size()<<endl;
+           
             return false;
         }
-        cout<<"Termine analizar parametros"<<endl;
+    
     }
     
     
@@ -1559,11 +1563,9 @@ bool ast_Actuals::analizarActuals(Scope * scope, ScopeFunc * funcion,int numLine
                     return false;
                 }
 
-                cout<<"Tengo clase parametro"<<endl;
-               
-               cout<<"Tengo clase parametro"<<endl;
+                
             }
-            cout<<"Llegue fina"<<endl;
+           
 
         }
         if(!parametrosCorrectos){
@@ -1772,43 +1774,42 @@ bool ScopeProgram::analizarArbol(){
        
     }
 
-     cout<<"Analizando clases "<<endl;
+  
         for(int j = 0; j < (*this->clases).size();j++){
             ScopeClass * clase = clases->at(j);
-            cout<<"Analizando clase "<<clase->getClase()->getIdent()<<endl;
+           ;
             if(clase->analizarClase()){
-                cout<<"Formato de clase correcto"<<endl;
+               
             }
             else{
-                cout<<"Formato de clase inccorrecto"<<endl;
+            
                 this->errores = unirErrores(errores,clase->getErrores());
                 scopeValido = false;
             }
         }
-        cout<<"Analizando funciones "<<endl;
+     
         
         for(int m = 0; m < (*this->funciones).size();m++){
             ScopeFunc * funcion = funciones->at(m);
-            cout<<"Analizando funcion "<<funcion->getFuncion()->getIdent()<<endl;
+            
              if(funcion->analizarFunc()){
-                cout<<"Formato de funcion correcto"<<endl;
+                
             }
             else{
-                cout<<"Formato de funcion inccorrecto"<<endl;
+            
                 this->errores = unirErrores(errores,funcion->getErrores());
                 scopeValido = false;
             }
             
         }
-        cout<<"Analizando variables "<<endl;
+       
         for(int n = 0; n < (*this->variables).size();n++){
             ScopeVar * variable = variables->at(n);
-            cout<<"Analizando variable "<<variables->at(n)->getVariable()->getVar()->getString()<<endl;
+           
              if(variable->analizarVar()){
-                cout<<"Formato de variable correcto"<<endl;
+                
             }
             else{
-                cout<<"Formato de variable inccorrecto"<<endl;
                 this->errores = unirErrores(errores,variable->getErrores());
                 scopeValido = false;
             }
@@ -2181,6 +2182,7 @@ ast_ClassDecl * ScopeClass::getClase(){
 }
 
 vector<ScopeVar *> * ScopeClass::getVariables(){
+
     return variables;
 }
 
@@ -2215,6 +2217,8 @@ bool ScopeClass::analizarClase(){
             ScopeClass * clasePadre = (*scopePadre).obtenerClase(nombreClasePadre);
             if (clasePadre != NULL){
                 this->clasePadre = clasePadre;
+               
+
                 clasePadre->getClasesHijas()->push_back(this);
             }
             else{
@@ -2286,6 +2290,8 @@ bool ScopeClass::identRepetido(string ident){
         }
     }
 
+   
+
     if(cantidad > 1){
         return true;
     }
@@ -2302,6 +2308,10 @@ bool ScopeClass::existeIdent(string ident){
         if((*(*this->funciones).at(i)).existeIdent(ident)){
             return true;
         }
+    }
+
+    if(clasePadre !=NULL){
+        return clasePadre->existeIdent(ident);
     }
 
     return false;
@@ -2351,6 +2361,9 @@ ScopeVar * ScopeClass::obtenerVar(string identVar ){
             return variable;
         }
     }
+    if(clasePadre !=NULL){
+        return clasePadre->obtenerVar(identVar);
+    }
 
     return padre->obtenerVar(identVar);
 }
@@ -2365,6 +2378,10 @@ bool ScopeClass::existeVariable(string identVar){
         if(variable->getVariable()->getVar()->getString() == identVar){
             return true;
         }
+    }
+
+    if(clasePadre !=NULL){
+        return clasePadre->existeVariable(identVar);
     }
 
     return false;
