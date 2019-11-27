@@ -14,16 +14,16 @@ class Zelda extends Princesa {
      return 5;
      z.llamar();
      z.llamarALink(15);
-     
+   int p;
+   p = hola;  
    }
-   
-
    
 }
 
 int h;
 
 class Princesa{
+   int hola;
    void llamar(){
       h = 5;
    

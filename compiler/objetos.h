@@ -837,6 +837,7 @@ class ScopeClass : public Scope{
     vector<ScopeFunc *> * funciones;
     ScopeClass * clasePadre;
     vector<ScopeClass *> * clasesHijas; 
+    vector<string> * ConflictosPadre;
     int tipoClase;  // Creada = 0, int = 1, double = 2, void = 3,string = 4, bool = 5
         public:
         ScopeClass(int);
@@ -859,6 +860,8 @@ class ScopeClass : public Scope{
         ScopeClass * obtenerAtributo(string);
         ScopeFunc * obtenerMetodo(string);
         string getNombreTipoClase();
+        vector<string> * getConflictosPadre();
+        bool analizarConflictosPadre(ScopeClass*);
         ~ScopeClass(){};
 };
 

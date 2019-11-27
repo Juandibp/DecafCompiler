@@ -1818,6 +1818,11 @@ bool ScopeProgram::analizarArbol(){
 
         for(int i = 0; i < clases->size();i++){
             ScopeClass * clase = clases->at(i);
+            if(clase->getClasePadre()!=NULL){
+                if(clase->analizarConflictosPadre(clase->getClasePadre())){
+                    this->errores=unirErrores(this->errores,clase->getConflictosPadre());
+                }
+            }
             for(int j = 0; j < clase->getFunciones()->size();j++){
                 ScopeFunc * funcion = clase->getFunciones()->at(j);
                 if(!funcion->analizarStmts()){
@@ -2165,6 +2170,7 @@ ScopeClass::ScopeClass(int tipoClase):Scope(3,NULL){
     this-> variables = new std::vector<ScopeVar *>();
     this->funciones = new std::vector<ScopeFunc *>();
     this->clasesHijas = new vector<ScopeClass *>();
+    this->ConflictosPadre = new vector<string>();
 }
 
 ScopeClass::ScopeClass(Scope * padre,ast_ClassDecl * clase): Scope(3,padre){
@@ -2174,8 +2180,28 @@ ScopeClass::ScopeClass(Scope * padre,ast_ClassDecl * clase): Scope(3,padre){
     this->tipoClase = 0;
     this->clasesHijas = new vector<ScopeClass *>();
     this->clasePadre == NULL;
+    this->ConflictosPadre = new vector<string>();
+}
+vector<string> * ScopeClass::getConflictosPadre(){
+    return this->ConflictosPadre;
 }
 
+bool ScopeClass::analizarConflictosPadre(ScopeClass* padre){
+    std::stringstream linea;
+    linea << (this->getClase()->getLinea());
+    std::stringstream columna;
+    columna << (this->getClase()->getColumna());
+    bool choquetipos=false;
+    for(int i=0; i<this->variables->size();i++){
+        for(int j =0; j<padre->variables->size();j++){
+            if(this->variables->at(i)->getVariable()->getVar()->getString()==padre->variables->at(j)->getVariable()->getVar()->getString()){
+                choquetipos=true;
+                (*this->ConflictosPadre).push_back("Error : declaracion previa de " + this->variables->at(i)->getVariable()->getVar()->getString() + " en " + linea.str() + ":" +columna.str());
+            }
+        }
+    }
+    return choquetipos;
+}
 
 ast_ClassDecl * ScopeClass::getClase(){
     return clase;
