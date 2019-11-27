@@ -466,7 +466,7 @@ class ast_Expr {
         int tipoExpr; // Binary = 1, Unary = 2, Read = 3, New = 4, NewArray = 5, Lvalue = 6, ast_Call = 7 , ast_Constant = 8
 };
 
-class ast_ExprSimple : ast_Expr{
+class ast_ExprSimple : public ast_Expr{
     public:
         ast_ExprSimple();
         bool analizarExpr(Scope *);
@@ -808,6 +808,7 @@ class ScopeFunc : public Scope {
     ScopeClass * tipoRetorno;
     vector<string> * listaParametros;
     vector<string> * erroresSmts;
+    bool returnValido;
 
     public:
         ScopeFunc(Scope *,ast_FunctionDecl *);
@@ -824,6 +825,8 @@ class ScopeFunc : public Scope {
         ScopeVar * obtenerVar(string);
         bool analizarStmts();
         vector<string> * getErroresStmts();
+        bool isReturnValido();
+        void setReturnValido(bool);
         ~ScopeFunc(){};
 
 };
@@ -888,6 +891,7 @@ class ScopeStmtBlock : public Scope{
         ScopeFunc * obtenerFunc(string);
         bool existeIdent(string);
         ScopeVar * obtenerVar(string);
+        ScopeFunc * obtenerFuncionActual();
         ~ScopeStmtBlock(){};
 };
 

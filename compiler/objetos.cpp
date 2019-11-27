@@ -204,7 +204,31 @@ bool ast_Type::getIsArray(){
 }
 
 string ast_Type::getIdent(){
-    return this->ident;
+    switch (tipoDato)
+    {
+    case 1:
+        return "int";
+        break;
+    case 2:
+        return "void";
+        break;
+    case 3:
+        return "bool";
+        break;
+    case 4:
+        return "double";
+        break;
+    case 5:
+        return "string";
+        break;
+    case 6:
+        return ident;
+        break;
+    
+    default:
+        break;
+    }
+    
 }
 
 void ast_Type::setIsArray(bool b){
@@ -503,18 +527,19 @@ ast_ElseStmt * ast_IfStmt ::getElseStmt(){
 }
 
 bool ast_IfStmt::analizarStmt(Scope * scope){
+    bool stmtCorrecto = true;
     std::stringstream linea;
     linea << (this->linea);
     std::stringstream columna;
     columna << (this->columna);
     if(expresion->isNull()){
         this->errores->push_back("Error: expresion invalida en " + linea.str() + ":"+columna.str()) ;
-        return false;
+       stmtCorrecto = false;
     }
     bool resultado = expresion->analizarExpr(scope);
         if(!resultado){
             this->errores = unirErrores(errores,expresion->getErrores());
-            return false;
+           stmtCorrecto = false;
         }
     switch (expresion->getTipoExpr())
     {
@@ -522,7 +547,7 @@ bool ast_IfStmt::analizarStmt(Scope * scope){
     case 4:
     case 5:
         this->errores->push_back("Error: expresion invalida en " + linea.str() + ":"+columna.str()) ;
-        return false;
+        stmtCorrecto = false;
         break;
     
     default:
@@ -530,18 +555,18 @@ bool ast_IfStmt::analizarStmt(Scope * scope){
     }
 
 
-
+    cout<<"Tipo stmt if"<<stmt->getLinea()<<endl;
     if(!(stmt->analizarStmt(scope))){
         errores = unirErrores(errores,stmt->getErrores());
-        return false;
+        stmtCorrecto = false;
     }
 
     if(!(elseStmt->analizarStmt(scope))){
         errores = unirErrores(errores,elseStmt->getErrores());
-        return false;
+       stmtCorrecto = false;
     }
 
-    return true;
+    return stmtCorrecto;
 }
 
 //ast_ElseStmt 
@@ -702,11 +727,23 @@ bool ast_ReturnStmt::getHaveExpr(){
     return this->haveExpr;
 }
 
-bool  ast_ReturnStmt ::analizarStmt(Scope * scope){
+
+bool  ast_ReturnStmt::analizarStmt(Scope * scope){
+    ScopeFunc *  funcion;
+    if(scope->getTipoScope() == 2){
+        funcion = (ScopeFunc *) scope;
+    }
+    else{
+        ScopeStmtBlock * stmtBlock = (ScopeStmtBlock *) scope;
+        funcion = stmtBlock->obtenerFuncionActual();
+    }
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
     if(haveExpr){
         if(expresion->analizarExpr(scope)){
             tipoRetorno = expresion->obtenerTipoExpr(scope);
-            return true;
         }
         else{
             errores = unirErrores(errores,expresion->getErrores());
@@ -714,8 +751,18 @@ bool  ast_ReturnStmt ::analizarStmt(Scope * scope){
         }
     }
     else{
-        //Falta agregar tipo de clase void
+        tipoRetorno = new ScopeClassVoid();
     }
+
+    if(funcion->getTipoRetorno()->getTipoClase() == tipoRetorno->getTipoClase()){
+        
+    }
+    else{
+        this->errores->push_back("Error: el tipo de retorno de la funcion "+ funcion->getFuncion()->getIdent()+ " no puede ser "+tipoRetorno->getNombreTipoClase() +" en " + linea.str() + ":"+columna.str()) ;
+        return false;
+    }
+
+    funcion->setReturnValido(true);
 
     return true;
 }
@@ -745,12 +792,23 @@ vector<ast_Expr *> * ast_PrintStmt::getExpresiones(){
 }
 
 bool ast_PrintStmt::analizarStmt(Scope * scope){
+    
+     std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
     bool resultado = true;
     for(int i = 0; i < expresiones->size();i++){
         ast_Expr * expresion = expresiones->at(i);
-
+        
         if(expresion->analizarExpr(scope)){
-            //Falta implementar string
+            ScopeClass * claseExpr = expresion->obtenerTipoExpr(scope);
+            
+            if(!(claseExpr->getTipoClase() == 1) && !(claseExpr->getTipoClase() == 4) && !(claseExpr->getTipoClase() == 5)){
+                
+                this->errores->push_back("Error: no es posible imprimier una variable de tipo "+claseExpr->getNombreTipoClase() +" en " + linea.str() + ":"+columna.str()) ;
+                resultado = false;
+            }
         }
         else{
             errores = unirErrores(errores,expresion->getErrores());
@@ -878,7 +936,7 @@ vector<string> * ast_Expr::getErrores(){
 
 //ast_ExprSimple
 
-ast_ExprSimple ::ast_ExprSimple():ast_Expr(){
+ast_ExprSimple ::ast_ExprSimple():  ast_Expr(){
     
 }
 ScopeClass * ast_ExprSimple::obtenerTipoExpr(Scope * scope){
@@ -1037,9 +1095,26 @@ int ast_ExprUnary::getTipoOp(){
 }
 
 bool ast_ExprUnary::analizarExpr(Scope * scope){
-     if(!expresion->analizarExpr(scope)){
+
+     std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna); if(!expresion->analizarExpr(scope)){
        this->errores =  unirErrores(this->errores,expresion->getErrores());
         return false;
+    }
+    ScopeClass * claseExpr = expresion->obtenerTipoExpr(scope);
+    if(tipoOp == 15){
+        if(!claseExpr->getTipoClase() == 5){
+            this->errores->push_back("Error: el tipo "+claseExpr->getNombreTipoClase() +" no se puede convertir a bool en " + linea.str() + ":"+columna.str()) ;
+            return false;
+        }
+        else{
+            if(!claseExpr->getTipoClase() == 1 && !claseExpr->getTipoClase() == 2){
+                this->errores->push_back("Error: el tipo "+claseExpr->getNombreTipoClase() +" no se puede convertir ne entero en " + linea.str() + ":"+columna.str()) ;
+            return false;
+            }
+        }
     }
 
     return true;
@@ -1114,6 +1189,7 @@ ast_Type * ast_ExprNewArray::getTipoDatos(){
 }
 
 bool ast_ExprNewArray::analizarExpr(Scope * scope){
+    bool exprValida = true;
     std::stringstream linea;
     linea << (this->linea);
     std::stringstream columna;
@@ -1123,7 +1199,7 @@ bool ast_ExprNewArray::analizarExpr(Scope * scope){
 
         if(tipoNew == NULL){
         this->errores->push_back("Error: el tipo "+ this->tipoDato->getIdent() + " no existe en " + linea.str() + ":"+columna.str()) ;
-        return false;
+        exprValida =false;
          }
    
 
@@ -1132,10 +1208,22 @@ bool ast_ExprNewArray::analizarExpr(Scope * scope){
     bool resultado = expresion->analizarExpr(scope);
     if(!resultado){
         errores = unirErrores(errores,expresion->getErrores());
-        return false;
+         exprValida =false;
+    }
+    else{
+        ScopeClass * claseExpr = expresion->obtenerTipoExpr(scope);
+        if(!(claseExpr->getTipoClase() == 1) ){
+            this->errores->push_back("Error: el tipo "+claseExpr->getNombreTipoClase() +" no se puede convertir en entero en " + linea.str() + ":"+columna.str()) ;
+            exprValida =false;
+             
+        }
+       
     }
 
-    return true;
+
+    
+
+    return exprValida;
 }
 
 ScopeClass * ast_ExprNewArray::obtenerTipoExpr(Scope * scope){
@@ -1187,12 +1275,13 @@ string ast_LValueSimple::getIdent(){
 }
 
 bool ast_LValueSimple :: analizarExpr(Scope * scope){
-    bool resultado = exiteIdent(scope,this->ident);
+
+    ScopeVar * variable = scope->obtenerVar(ident);
     std::stringstream linea;
     linea << (this->linea);
     std::stringstream columna;
     columna << (this->columna);
-    if(!resultado){
+    if(variable == NULL){
         this->errores->push_back("Error: el identificador "+ ident +" no esta definido en " + linea.str() + ":"+columna.str()) ;
         return false;
     }
@@ -1262,7 +1351,35 @@ ast_Expr * ast_LvalueArray::getSecondExpr(){
 }
 
 bool ast_LvalueArray::analizarExpr(Scope * scope){
-    return true;
+     std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
+    bool exprValida = true;
+    if(!firstExpr->analizarExpr(scope)){
+        errores = unirErrores(errores,firstExpr->getErrores());
+        exprValida =false;
+    }
+    if(!secondExpr->analizarExpr(scope)){
+        errores = unirErrores(errores,secondExpr->getErrores());
+        exprValida =false;
+    }
+
+    if(exprValida){
+        ScopeClass * firstExprClase = firstExpr->obtenerTipoExpr(scope);
+        ScopeClass * secondExprClase = secondExpr->obtenerTipoExpr(scope);
+
+        if(firstExprClase->getTipoClase() == 3){
+            this->errores->push_back("Error: el tipo de la variable no puede ser void en " + linea.str() + ":"+columna.str()) ;
+            exprValida = false;
+        }
+        if(!secondExprClase->getTipoClase() == 1){
+            this->errores->push_back("Error: el tipo "+secondExprClase->getNombreTipoClase() +" no se puede convertir ne entero en " + linea.str() + ":"+columna.str()) ;
+            exprValida = false;
+        }
+    }
+
+    return exprValida;
 }
 
 
@@ -1313,6 +1430,8 @@ bool ast_CallSimple::analizarExpr(Scope * scope){
         return false;
     }
 
+
+
     return true;
 }
 
@@ -1348,16 +1467,30 @@ bool ast_CallExpr::analizarExpr(Scope * scope){
     linea << (this->linea);
     std::stringstream columna;
     columna << (this->columna);
-    if(!tipoExpresion->existeMetodo(this->ident)){
-         this->errores->push_back("Error: la clase "+tipoExpresion->getClase()->getIdent() + "no tiene un metodo"+ this->ident+" en " + linea.str() + ":"+columna.str()) ;
-         return false;
-    }
-    ScopeFunc * funcion = tipoExpresion->obtenerFunc(ident);
-    bool resultado = this->actuals->analizarActuals(scope,funcion,this->linea,this->columna);
-    if(!resultado){
-        errores = unirErrores(errores,actuals->getErrores());
+   
+    if(tipoExpresion->getTipoClase() != 0){
+        this->errores->push_back("Error: los tipos primitivos no tienen metodos en " + linea.str() + ":"+columna.str()) ;
         return false;
     }
+    else
+    {   
+        cout<<"Analizar metodo"<<endl;
+        if(!tipoExpresion->existeMetodo(this->ident)){
+         this->errores->push_back("Error: la clase "+tipoExpresion->getClase()->getIdent() + "no tiene un metodo"+ this->ident+" en " + linea.str() + ":"+columna.str()) ;
+         return false;
+        }
+        ScopeFunc * funcion = tipoExpresion->obtenerFunc(ident);
+        cout<<"Analizar parametros"<<endl;
+        bool resultado = this->actuals->analizarActuals(scope,funcion,this->linea,this->columna);
+        if(!resultado){
+            errores = unirErrores(errores,actuals->getErrores());
+            cout<<"Cantidad errores actuals"<<actuals->getErrores()->size()<<endl;
+            return false;
+        }
+        cout<<"Termine analizar parametros"<<endl;
+    }
+    
+    
     return true;
 
 } 
@@ -1372,6 +1505,7 @@ ScopeClass * ast_CallExpr::obtenerTipoExpr(Scope * scope){
 
 ast_Actuals::ast_Actuals(vector<ast_Expr *> * expresiones){
     this->expresiones = expresiones;
+    this->errores = new vector<string>();
 }
 
 vector<ast_Expr *> * ast_Actuals::getExpresiones(){
@@ -1383,24 +1517,36 @@ bool ast_Actuals::analizarActuals(Scope * scope, ScopeFunc * funcion,int numLine
     linea << (numLinea);
     std::stringstream columna;
     columna << (numColumna);
+ 
     if(expresiones->size() == funcion->getFuncion()->getFormals()->getVariables()->size()){
         bool parametrosCorrectos = true;
         for(int i = 0; i < expresiones->size();i++){
             ast_Expr * expresion = expresiones->at(i);
-            ScopeClass * tipoExpresion = (expresion->obtenerTipoExpr(scope));
+            ScopeClass * claseExpresion = (expresion->obtenerTipoExpr(scope));
 
             ast_Variable * variable = funcion->getFuncion()->getFormals()->getVariables()->at(i);
 
             string tipoVariable = variable->getTipo()->getIdent(); 
+           
+            if(!(claseExpresion->getNombreTipoClase() == tipoVariable)){
+                ScopeClass * claseParametro ;
+                if(variable->getTipo()->getTipo() == 6){
+                    claseParametro = scope->obtenerClase(tipoVariable);
+                    if(!claseParametro->isClaseHija(claseExpresion)){
+                    this->errores->push_back("Error: El parametro recibido no coincide con el tipo de "+ variable->getString()+ " en " + linea.str() + ":"+columna.str()) ;
+                    return false;
+                    }
+                }
+                else{
+                    this->errores->push_back("Error: El parametro recibido no coincide con el tipo de "+ variable->getString()+ " en " + linea.str() + ":"+columna.str()) ;
+                    return false;
+                }
 
-            if(!(tipoExpresion->getClase()->getIdent() == tipoVariable)){
-                ScopeClass * claseParametro = scope->obtenerClase(tipoVariable);
-
-               if(!claseParametro->isClaseHija(tipoExpresion)){
-                   this->errores->push_back("Error: El parametro recibido no coincide con el tipo de "+ variable->getString()+ " en " + linea.str() + ":"+columna.str()) ;
-               }
+                cout<<"Tengo clase parametro"<<endl;
+               
+               cout<<"Tengo clase parametro"<<endl;
             }
-
+            cout<<"Llegue fina"<<endl;
 
         }
         if(!parametrosCorrectos){
@@ -1408,6 +1554,7 @@ bool ast_Actuals::analizarActuals(Scope * scope, ScopeFunc * funcion,int numLine
         }
     }
     else{
+        
         this->errores->push_back("Error:El numero de parametros no coincide con la funcion "+funcion->getFuncion()->getIdent()+" en " + linea.str() + ":"+columna.str()) ;
         return false;
     }
@@ -1762,7 +1909,7 @@ ScopeVar * ScopeProgram::obtenerVar(string identVar){
 ScopeFunc::ScopeFunc(Scope * padre, ast_FunctionDecl * funcion):Scope(2,padre){
     
     this->funcion = funcion;
-   
+    this->returnValido =false;
     this->variables = new std::vector<ScopeVar *>();
     this->tipoExistente = true;
     this->erroresSmts = new vector<string>();
@@ -1778,6 +1925,10 @@ vector<ScopeVar *> * ScopeFunc::getVariables(){
 
 bool ScopeFunc::isTipoExistente(){
     return tipoExistente;
+}
+
+bool ScopeFunc::isReturnValido(){
+    return returnValido;
 }
 
 bool ScopeFunc::analizarFunc(){
@@ -1796,6 +1947,30 @@ bool ScopeFunc::analizarFunc(){
            scopeValido = false;
         }
         
+    }
+    else{
+        switch (tipo->getTipo())
+        {
+        case 1:
+            tipoRetorno = new ScopeClassInt();
+            break;
+        case 2:
+            tipoRetorno = new ScopeClassVoid();
+            this->returnValido = true;
+            break;
+        case 3:
+            tipoRetorno = new ScopeClassBool();
+            break;
+        case 4:
+            tipoRetorno = new ScopeClassDouble();
+            break;
+        case 5:
+            tipoRetorno = new ScopeClassString();
+            break;
+        
+        default:
+            break;
+        }
     }
     //Verificar nombre repetido
     if((*this->padre).identRepetido(ident)){
@@ -1854,10 +2029,15 @@ bool ScopeFunc::analizarFunc(){
 }
 
 bool ScopeFunc::analizarStmts(){
+     std::stringstream linea;
+    linea << (this->funcion->getLinea());
+    std::stringstream columna;
+    columna << (this->funcion->getColumna());
     for(int i = 0; i < this->funcion->getStmtBlock()->getContent()->size();i++ ){
         
         ast_StmtOrVariableDecl * stmtOrDecl = this->funcion->getStmtBlock()->getContent()->at(i);
         if (stmtOrDecl->getTipo() == 1){
+            
             ast_Stmt * stmt =  stmtOrDecl->getStmt();
             if(!stmt->analizarStmt(this)){
                 scopeValido = false;
@@ -1868,9 +2048,18 @@ bool ScopeFunc::analizarStmts(){
 
     }
 
+    if(!returnValido){
+        
+        erroresSmts->push_back("Error: la funcion "+funcion->getIdent() +" necesita un valor de retorno en " + linea.str() + ":"+columna.str());
+        scopeValido=false;
+    }
+
     return scopeValido;
 }
 
+void ScopeFunc::setReturnValido(bool b){
+    returnValido =b;
+}
 vector<string> * ScopeFunc::getErroresStmts(){
     return erroresSmts;
 }
@@ -1882,6 +2071,12 @@ bool ScopeFunc::identRepetido(string ident){
             cantidad++;
         }
     }
+    for(int i; i <funcion->getFormals()->getVariables()->size();i++){
+        ast_Variable * variable = funcion->getFormals()->getVariables()->at(i);
+        if(variable->getString() == ident){
+            cantidad++;
+        }
+    }
     if(cantidad >1 ){
         return true;
     }
@@ -1890,7 +2085,13 @@ bool ScopeFunc::identRepetido(string ident){
 
 bool ScopeFunc::existeIdent(string ident){
     for(int i = 0; i< (*this->variables).size();i++){
-        if((*(*this->variables).at(i)).identRepetido(ident)){
+        if((*(*this->variables).at(i)).existeIdent(ident)){
+            return true;
+        }
+    }
+    for(int i; i <funcion->getFormals()->getVariables()->size();i++){
+        ast_Variable * variable = funcion->getFormals()->getVariables()->at(i);
+        if(variable->getString() == ident){
             return true;
         }
     }
@@ -1917,6 +2118,16 @@ ScopeVar * ScopeFunc::obtenerVar(string identVar){
         ScopeVar * variable = variables->at(i);
         if(variable->getVariable()->getVar()->getString() == identVar){
             return variable;
+        }
+    }
+
+    for(int i; i <funcion->getFormals()->getVariables()->size();i++){
+        ast_Variable * variable = funcion->getFormals()->getVariables()->at(i);
+        ast_VariableDecl * declVar = new ast_VariableDecl(funcion->getLinea(),funcion->getColumna(),1,variable);
+
+        ScopeVar * scopeVariable = new ScopeVar(this,declVar);
+        if(variable->getString() == identVar){
+            return scopeVariable;
         }
     }
 
@@ -2061,12 +2272,12 @@ bool ScopeClass::identRepetido(string ident){
 
 bool ScopeClass::existeIdent(string ident){
     for(int i = 0; i< (*this->variables).size();i++){
-        if((*(*this->variables).at(i)).identRepetido(ident)){
+        if((*(*this->variables).at(i)).existeIdent(ident)){
            return true;
         }
     }
     for(int i = 0; i< (*this->funciones).size();i++){
-        if((*(*this->funciones).at(i)).identRepetido(ident)){
+        if((*(*this->funciones).at(i)).existeIdent(ident)){
             return true;
         }
     }
@@ -2313,7 +2524,7 @@ bool ScopeStmtBlock::identRepetido(string ident){
 
 bool ScopeStmtBlock::existeIdent(string ident){
     for(int i = 0; i< (*this->variables).size();i++){
-        if((*(*this->variables).at(i)).identRepetido(ident)){
+        if((*(*this->variables).at(i)).existeIdent(ident)){
             return true;
         }
     }
@@ -2338,6 +2549,14 @@ ScopeVar * ScopeStmtBlock::obtenerVar(string identVar ){
     }
 
     return padre->obtenerVar(identVar);
+}
+
+ScopeFunc * ScopeStmtBlock::obtenerFuncionActual(){
+    if(padre->getTipoScope() == 2){
+        return (ScopeFunc *) padre;
+    }
+    ScopeStmtBlock * scopeStmtBlock = (ScopeStmtBlock *) padre;
+    return scopeStmtBlock->obtenerFuncionActual();
 }
 
 ScopeClassInt::ScopeClassInt():ScopeClass(1){

@@ -306,7 +306,7 @@ ExprBinaria : Expr {
 			$$ = $1;
 		} 
 	| {
-		
+		$$ = new ast_ExprSimple();
 	}
 
 IfStmt : token_if opar Expr cpar Stmt ElseStmt {

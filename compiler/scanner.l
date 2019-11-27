@@ -192,6 +192,7 @@ false                           {column = column + yyleng;printScannerTable(line
 \t
 \n                              {lineno++; column = 0;}
 " "                             {column++;}
+\.                              {column++;return(punto);}
 
 \"{CHAR}* 						{printf("String no cerrado en linea %d y columna %d\n ",lineno,column);exit(1);}
 .				                {printf("Caracter ilegal <%s> en linea %d y columna %d\n",yytext,lineno,column);exit(1);}
