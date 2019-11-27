@@ -130,6 +130,10 @@ void ast_Variable::toString(int cantidadTabs){
     cout<<tabs + "|- "+ tipo + " "+ this->ident<<endl; 
 }
 
+ScopeClass * ast_Variable::getClaseVariable(){
+    return claseVariable;
+}
+
 int ast_Variable::analizarVariable(vector<string> * listaParametros, Scope * scope ){
     ScopeClass * tipoVariable;
     std::stringstream linea;
@@ -144,13 +148,27 @@ int ast_Variable::analizarVariable(vector<string> * listaParametros, Scope * sco
         }
     }
 
-    if(this->getTipo()->getTipo() == 6){
-        tipoVariable = scope->obtenerClase(this->getTipo()->getIdent());
-
-        if(tipoVariable == NULL){
+   
+    switch(this->getTipo()->getTipo()){
+        case 1 :
+            claseVariable = new ScopeClassInt(); 
+            break;
+        case 3 :
+            claseVariable = new ScopeClassBool();
+            break;
+        case 4:
+            claseVariable = new ScopeClassDouble();
+            break;
+        case 5:
+            claseVariable = new ScopeClassString();
+            break;
+        case 6 :
+            claseVariable = scope->obtenerClase(this->getTipo()->getIdent());
+            if(claseVariable == NULL){
             error = "Error: el tipo "+ this->getTipo()->getIdent() + " no existe en " + linea.str() + ":"+columna.str() ;
             return 2;
-        }
+            }
+            break;
     }
 
    
@@ -864,7 +882,7 @@ ast_ExprSimple ::ast_ExprSimple():ast_Expr(){
     
 }
 ScopeClass * ast_ExprSimple::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    return new ScopeClassVoid();
 }
 bool ast_ExprSimple::analizarExpr(Scope * scope){
     return true;
@@ -892,20 +910,113 @@ int ast_ExprBinary::getTipoOp(){
 }
 
 bool ast_ExprBinary::analizarExpr(Scope * scope){
+    
+    std::stringstream linea;
+    linea << (this->linea);
+    std::stringstream columna;
+    columna << (this->columna);
+    bool exprValida = true;
     if(!exprIzq->analizarExpr(scope)){
        this->errores =  unirErrores(this->errores,exprIzq->getErrores());
-        return false;
+        exprValida = false;
     }
-     if(!exprDer->analizarExpr(scope)){
+    if(!exprDer->analizarExpr(scope)){
        this->errores =  unirErrores(this->errores,exprDer->getErrores());
-        return false;
+       exprValida = false;
     }
-    return true;
+    
+    if(exprValida){
+        bool tiposCompatibles = true;
+        ScopeClass * claseExprIzq = exprIzq->obtenerTipoExpr(scope);
+        ScopeClass * claseExprDer = exprDer->obtenerTipoExpr(scope);
+        if(clasesCompatibles(claseExprIzq,claseExprDer)){
+            
+            switch (tipoOp){
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+                if(!claseExprIzq->getTipoClase() == 1 && !claseExprDer->getTipoClase() == 2){
+                    tiposCompatibles = false;
+                }
+                break;
+            case 13:
+            case 14:
+            case 15:   
+                if(!claseExprIzq->getTipoClase() == 5){
+                    tiposCompatibles == false;
+                }
+                break;
+            default:
+                break;
+            }
+        }
+        else{
+            if(claseExprIzq->getTipoClase() == 0){
+                if(tipoOp == 11 || tipoOp == 12){
+                    if(!clasesCompatibles(claseExprDer,claseExprIzq)){
+                        tiposCompatibles = false;
+                    }
+                } 
+                else{
+                    tiposCompatibles = false;
+                }
+            }
+            else{
+                tiposCompatibles = false;
+            }
+            
+        }
+
+        if(!tiposCompatibles){
+            this->errores->push_back("Error: los tipos "+ claseExprIzq->getNombreTipoClase() + " y " + claseExprDer->getNombreTipoClase() +" no son compatibles en " + linea.str() + ":"+columna.str()) ;
+                exprValida = false;
+        }
+        
+    }
+    
+    
+
+   
+
+    
+    return exprValida;
 
 }
 
 ScopeClass * ast_ExprBinary::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    switch (tipoOp)
+    {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+        return exprIzq->obtenerTipoExpr(scope);
+        break;
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+        return new ScopeClassBool();
+        break;
+    
+    
+    
+    default:
+        break;
+    }
 }
 
 //ast_ExprUnary
@@ -935,7 +1046,7 @@ bool ast_ExprUnary::analizarExpr(Scope * scope){
 }
 
 ScopeClass * ast_ExprUnary::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    return new ScopeClassBool();
 }
 
 //ast_ExprRead
@@ -953,7 +1064,10 @@ bool ast_ExprRead::analizarExpr(Scope * scope){
 }
 
 ScopeClass * ast_ExprRead::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    if(this->tipoRead == 1){
+        return new ScopeClassString();
+    }
+    return new ScopeClassInt();
 }
 
 //ast_ExprNew
@@ -981,7 +1095,7 @@ bool ast_ExprNew::analizarExpr(Scope * scope){
 }
 
 ScopeClass * ast_ExprNew::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    return scope->obtenerClase(ident);
 }
 
 //ExprNewArrray
@@ -1025,7 +1139,28 @@ bool ast_ExprNewArray::analizarExpr(Scope * scope){
 }
 
 ScopeClass * ast_ExprNewArray::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    switch (this->tipoDato->getTipo())
+    {
+    case 1: 
+        return new ScopeClassInt(); 
+        break;
+    case 3:
+        return new ScopeClassBool();
+        break;
+    case 4:
+        return new ScopeClassDouble();
+        break;
+    case 5:
+        return new ScopeClassString();
+        break;
+    case 6:
+        return scope->obtenerClase(this->tipoDato->getIdent());
+        break;
+    
+    default:
+        break;
+    }
+    
 }
 
 //Lvalue
@@ -1038,9 +1173,7 @@ int ast_LValue::getTipoLvalue(){
     return this->tipoLvalue;
 }
 
-ScopeClass * ast_LValue::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
-}
+
 
 //ast_LValueSimple
 
@@ -1067,7 +1200,9 @@ bool ast_LValueSimple :: analizarExpr(Scope * scope){
 }
 
 ScopeClass * ast_LValueSimple::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+
+    ScopeVar * variable = scope->obtenerVar(ident);
+    return variable->getVariable()->getVar()->getClaseVariable();
 }
 
 //ast_LvalueExpr
@@ -1097,7 +1232,7 @@ bool ast_LvalueExpr::analizarExpr(Scope * scope){
     }
     ScopeClass * clase = expresion->obtenerTipoExpr(scope);
    
-    if(!clase->isTipoPrimitivo() &&!clase->existeVariable(this->ident)){
+    if(clase->getTipoClase() == 0  &&!clase->existeVariable(this->ident)){
             this->errores->push_back("Error: la clase "+ clase->getClase()->getIdent() + "no tiene un atributo "+this->ident+" en " + linea.str() + ":"+columna.str()) ;
             return false;
     }
@@ -1108,7 +1243,8 @@ bool ast_LvalueExpr::analizarExpr(Scope * scope){
 }
 
 ScopeClass * ast_LvalueExpr::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    ScopeClass * claseExpr = expresion->obtenerTipoExpr(scope);
+    return claseExpr->obtenerAtributo(ident);
 }
 //ast_LvalueArray
 
@@ -1131,7 +1267,7 @@ bool ast_LvalueArray::analizarExpr(Scope * scope){
 
 
 ScopeClass * ast_LvalueArray::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    return firstExpr->obtenerTipoExpr(scope);
 }
 
 //ast_Call
@@ -1181,7 +1317,8 @@ bool ast_CallSimple::analizarExpr(Scope * scope){
 }
 
 ScopeClass * ast_CallSimple::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    ScopeFunc * funcion = scope->obtenerFunc(ident);
+    return funcion->getTipoRetorno();
 }
 
 
@@ -1226,7 +1363,9 @@ bool ast_CallExpr::analizarExpr(Scope * scope){
 } 
 
 ScopeClass * ast_CallExpr::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    ScopeClass * claseExpr = this->expr->obtenerTipoExpr(scope);
+    ScopeFunc * metodo = claseExpr->obtenerMetodo(ident);
+    return metodo->getTipoRetorno();
 }
 
 //ast_Actuals
@@ -1295,7 +1434,27 @@ bool ast_Constant::analizarExpr(Scope *){
 }
 
 ScopeClass * ast_Constant::obtenerTipoExpr(Scope * scope){
-    return new ScopeClass(scope,new ast_ClassDecl(1,1,1,"","",new vector<string>(),new vector<ast_Field * >()));
+    switch (this->tipoConst)
+    {
+    case 1:
+        return new ScopeClassInt();
+        break;
+    case 2:
+        return new ScopeClassDouble();
+        break;
+    case 3:
+        return new ScopeClassBool();
+        break;
+    case 4:
+        return new ScopeClassString();
+        break;
+    case 5:
+        return new ScopeClassVoid();
+        break;
+    
+    default:
+        break;
+    }
 }
 
 //ast_IntConstant
@@ -1491,7 +1650,25 @@ bool ScopeProgram::analizarArbol(){
             }
 
         }
-        
+
+        for(int i = 0; i < clases->size();i++){
+            ScopeClass * clase = clases->at(i);
+            for(int j = 0; j < clase->getFunciones()->size();j++){
+                ScopeFunc * funcion = clase->getFunciones()->at(j);
+                if(!funcion->analizarStmts()){
+                    errores = unirErrores(errores,funcion->getErroresStmts());
+                    scopeValido =false;
+                }
+            }
+        }
+
+        for(int i = 0; i < funciones->size();i++){
+            ScopeFunc * funcion = funciones->at(i);
+            if(!funcion->analizarStmts()){
+                errores = unirErrores(errores,funcion->getErroresStmts());
+                scopeValido =false;
+            }
+        }        
     return scopeValido;
 }
 
@@ -1571,6 +1748,15 @@ ScopeFunc * ScopeProgram::obtenerFunc(string identFunc){
     return NULL;
 }
 
+ScopeVar * ScopeProgram::obtenerVar(string identVar){
+    for(int i = 0; i < (*this->variables).size();i++){
+        if((this->variables->at(i)->getVariable()->getVar()->getString()) == identVar){
+            return (this->variables->at(i));
+        }
+    }
+    return NULL;
+}
+
 //ScopeFunc
 
 ScopeFunc::ScopeFunc(Scope * padre, ast_FunctionDecl * funcion):Scope(2,padre){
@@ -1579,6 +1765,7 @@ ScopeFunc::ScopeFunc(Scope * padre, ast_FunctionDecl * funcion):Scope(2,padre){
    
     this->variables = new std::vector<ScopeVar *>();
     this->tipoExistente = true;
+    this->erroresSmts = new vector<string>();
 }
 
 ast_FunctionDecl * ScopeFunc::getFuncion(){
@@ -1661,25 +1848,31 @@ bool ScopeFunc::analizarFunc(){
         }
     }
 
-    //Falta analizar Stmts
+    
+    
+    return this->scopeValido;
+}
+
+bool ScopeFunc::analizarStmts(){
     for(int i = 0; i < this->funcion->getStmtBlock()->getContent()->size();i++ ){
         
         ast_StmtOrVariableDecl * stmtOrDecl = this->funcion->getStmtBlock()->getContent()->at(i);
         if (stmtOrDecl->getTipo() == 1){
-            cout<<"Entre analizar stmt"<<endl;
             ast_Stmt * stmt =  stmtOrDecl->getStmt();
-            cout<<"Tengo el stmt"<<endl;
             if(!stmt->analizarStmt(this)){
-                cout<<"Logre analizarlo"<<endl;
                 scopeValido = false;
-                errores = unirErrores(errores,stmt->getErrores());
-                cout<<"Erores reportados"<<endl;
+                erroresSmts = unirErrores(erroresSmts,stmt->getErrores());
             }
            
         }
 
     }
-    return this->scopeValido;
+
+    return scopeValido;
+}
+
+vector<string> * ScopeFunc::getErroresStmts(){
+    return erroresSmts;
 }
 
 bool ScopeFunc::identRepetido(string ident){
@@ -1719,6 +1912,17 @@ ScopeFunc * ScopeFunc::obtenerFunc(string identFunc){
     return this->padre->obtenerFunc(identFunc);
 }
 
+ScopeVar * ScopeFunc::obtenerVar(string identVar){
+    for(int i = 0; i < variables->size();i++){
+        ScopeVar * variable = variables->at(i);
+        if(variable->getVariable()->getVar()->getString() == identVar){
+            return variable;
+        }
+    }
+
+    return padre->obtenerVar(identVar);
+}
+
 vector<string> * ScopeFunc::getListaParametros(){
     return this->listaParametros;
 }
@@ -1726,11 +1930,18 @@ vector<string> * ScopeFunc::getListaParametros(){
 
 //ScopeClass 
 
+ScopeClass::ScopeClass(int tipoClase):Scope(3,NULL){
+    this->tipoClase = tipoClase;
+}
+
 ScopeClass::ScopeClass(Scope * padre,ast_ClassDecl * clase): Scope(3,padre){
     this-> clase = clase;
     this-> variables = new std::vector<ScopeVar *>();
     this->funciones = new std::vector<ScopeFunc *>();
+    this->tipoClase = 0;
+    this->clasesHijas = new vector<ScopeClass *>();
 }
+
 
 ast_ClassDecl * ScopeClass::getClase(){
     return clase;
@@ -1771,6 +1982,7 @@ bool ScopeClass::analizarClase(){
             ScopeClass * clasePadre = (*scopePadre).obtenerClase(nombreClasePadre);
             if (clasePadre != NULL){
                 this->clasePadre = clasePadre;
+                clasePadre->getClasesHijas()->push_back(this);
             }
             else{
                 (*this->errores).push_back("Error : la clase " + nombreClasePadre + " no existe " + " en " + linea.str() + ":" +columna.str());
@@ -1877,7 +2089,9 @@ bool ScopeClass::isClaseHija(ScopeClass* posibleParametro){
             return true;
         }
         else{
-            claseHija->isClaseHija(posibleParametro);
+           if( claseHija->isClaseHija(posibleParametro)){
+               return true;
+           }
         }
 
         }
@@ -1897,8 +2111,19 @@ ScopeFunc * ScopeClass::obtenerFunc(string identFunc){
     return padre->obtenerFunc(identFunc);
 }
 
-bool ScopeClass::isTipoPrimitivo(){
-    return tipoPrimitivo;
+ScopeVar * ScopeClass::obtenerVar(string identVar ){
+    for(int i = 0; i < variables->size() ; i++){
+        ScopeVar * variable = variables->at(i);
+        if(variable->getVariable()->getVar()->getString() == identVar){
+            return variable;
+        }
+    }
+
+    return padre->obtenerVar(identVar);
+}
+
+int ScopeClass::getTipoClase(){
+    return tipoClase;
 }
 
 bool ScopeClass::existeVariable(string identVar){
@@ -1927,8 +2152,61 @@ vector<ScopeClass * > * ScopeClass::getClasesHijas(){
     return clasesHijas;
 }
 
+ScopeClass * ScopeClass::obtenerAtributo(string identAtributo){
+    for(int i = 0; i < variables->size() ; i++){
+        ScopeVar * variable = variables->at(i);
+        if(variable->getVariable()->getVar()->getString() == identAtributo){
+            return variable->getVariable()->getVar()->getClaseVariable();
+        }
+    }
+    if(clasePadre != NULL){
+        return clasePadre->obtenerAtributo(identAtributo);
+    }
+    else{
+        return NULL;
+    }
+}
 
 
+ScopeFunc * ScopeClass::obtenerMetodo(string identMetodo){
+    for(int i = 0; i < funciones->size();i++){
+        ScopeFunc * funcion = funciones->at(i);
+        if(funcion->getFuncion()->getIdent() == identMetodo){
+            return funcion;
+        }
+    }
+    if(clasePadre != NULL){
+        return clasePadre->obtenerMetodo(identMetodo);
+    }
+    return NULL;
+}
+
+string ScopeClass::getNombreTipoClase(){
+    switch (tipoClase)
+    {
+    case 0:
+        return this->clase->getIdent();       
+        break;
+    case 1:
+        return "int";
+        break;
+    case 2:
+        return "double";
+        break;
+    case 3:
+        return "null";
+        break;
+    case 4:
+        return "string";
+        break;
+    case 5:
+        return "bool";
+        break;
+
+    default:
+        break;
+    }
+}
 
 //ScopeVar
 
@@ -1995,14 +2273,16 @@ ScopeFunc * ScopeVar::obtenerFunc(string identFunc){
     return this->padre->obtenerFunc(identFunc);
 }
 
-vector<string> * unirErrores(vector<string> * primeraLista,vector<string> * segundaLista){
 
-    for(int i = 0; i < segundaLista->size();i++){
-        primeraLista->push_back(segundaLista->at(i));
+ScopeVar * ScopeVar::obtenerVar(string identVar){
+    if(variable->getVar()->getString() == identVar){
+        return this;
     }
-
-    return primeraLista;
+    return padre->obtenerVar(identVar);
 }
+//ScopeStmtBlock
+
+
 
 ScopeStmtBlock::ScopeStmtBlock(Scope * padre,ast_StmtBlock * stmtBlock):Scope(5,padre){
    this->variables = new vector<ScopeVar *>();
@@ -2049,6 +2329,48 @@ ScopeFunc * ScopeStmtBlock::obtenerFunc(string identFunc){
     return this->padre->obtenerFunc(identFunc);
 }
 
+ScopeVar * ScopeStmtBlock::obtenerVar(string identVar ){
+    for(int i = 0; i < variables->size() ; i++){
+        ScopeVar * variable = variables->at(i);
+        if(variable->getVariable()->getVar()->getString() == identVar){
+            return variable;
+        }
+    }
+
+    return padre->obtenerVar(identVar);
+}
+
+ScopeClassInt::ScopeClassInt():ScopeClass(1){
+    
+}
+
+ScopeClassDouble::ScopeClassDouble():ScopeClass(2){
+    
+}
+
+ScopeClassVoid::ScopeClassVoid():ScopeClass(3){
+    
+}
+
+ScopeClassString::ScopeClassString():ScopeClass(4){
+    
+}
+
+ScopeClassBool::ScopeClassBool():ScopeClass(5){
+    
+}
+
+
+vector<string> * unirErrores(vector<string> * primeraLista,vector<string> * segundaLista){
+
+    for(int i = 0; i < segundaLista->size();i++){
+        primeraLista->push_back(segundaLista->at(i));
+    }
+
+    return primeraLista;
+}
+
+
 bool exiteIdent(Scope * scope, string ident){
     if(scope->existeIdent(ident)){
         return true;
@@ -2058,4 +2380,28 @@ bool exiteIdent(Scope * scope, string ident){
     }
     return false;
 
+}
+
+bool clasesCompatibles(ScopeClass * claseIzq,ScopeClass * claseDer){
+    if(claseIzq->getTipoClase() == claseDer->getTipoClase()){
+
+        if(claseIzq->getTipoClase() == 0){
+            if(claseIzq->getClase()->getIdent() == claseDer->getClase()->getIdent()){
+                return true;
+            }
+            else{
+                return claseIzq->isClaseHija(claseDer);
+            }
+
+        }
+        else{
+            return true;
+        }
+    }
+    else{
+        if((claseIzq->getTipoClase() == 0 && claseDer->getTipoClase() == 3)  || (claseIzq->getTipoClase() == 3 && claseDer->getTipoClase() == 0) ){
+            return true;
+        }
+        return false;
+    }
 }

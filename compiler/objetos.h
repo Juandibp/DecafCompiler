@@ -59,8 +59,15 @@ class ScopeProgram;
 class ScopeFunc;
 class ScopeClass;
 class ScopeVar;
+class ScopeStmtBlock;
+class ScopeClassInt;
+class ScopeClassDouble;
+class ScopeClassVoid;
+class ScopeClassString;
+class ScopeClassBool;
 vector<string> * unirErrores(vector<string> *,vector<string> * );
 bool exiteIdent(Scope *, string);
+bool clasesCompatibles(ScopeClass * ,ScopeClass * );
 
 
 
@@ -154,6 +161,7 @@ class ast_Variable {
     ast_Type * tipo;
     string ident; 
     string error;
+    ScopeClass * claseVariable;
     public:
         ast_Variable();
         ast_Variable(ast_Type *,string);
@@ -162,6 +170,7 @@ class ast_Variable {
         void toString(int);
         int analizarVariable(vector<string> *,Scope *);
         string getError();
+        ScopeClass * getClaseVariable();
         ~ast_Variable(){};
        
 };
@@ -469,7 +478,7 @@ class ast_ExprBinary : public ast_Expr {
     ast_Expr * exprIzq;
     ast_Expr * exprDer;
     int tipoOp; /*
-                tipoEql = 1
+                tipoEql = 1 
                 tipoPlus = 2
                 tipoMinus = 3
                 tipoMult = 4
@@ -758,6 +767,7 @@ class Scope {
         virtual bool identRepetido(string) = 0;
         virtual ScopeClass * obtenerClase(string) = 0;
         virtual ScopeFunc * obtenerFunc(string) = 0;
+        virtual ScopeVar * obtenerVar(string) = 0;
         virtual bool existeIdent(string) = 0;
         ~Scope(){};
 
@@ -786,6 +796,7 @@ class ScopeProgram : public Scope {
         ScopeClass * obtenerClase(string);
         ScopeFunc * obtenerFunc(string);
         bool existeIdent(string);
+        ScopeVar * obtenerVar(string);
         ~ScopeProgram(){};
 
 };
@@ -796,6 +807,7 @@ class ScopeFunc : public Scope {
     bool tipoExistente;
     ScopeClass * tipoRetorno;
     vector<string> * listaParametros;
+    vector<string> * erroresSmts;
 
     public:
         ScopeFunc(Scope *,ast_FunctionDecl *);
@@ -809,6 +821,9 @@ class ScopeFunc : public Scope {
         ScopeFunc * obtenerFunc(string);
         vector<string> * getListaParametros();
         bool existeIdent(string);
+        ScopeVar * obtenerVar(string);
+        bool analizarStmts();
+        vector<string> * getErroresStmts();
         ~ScopeFunc(){};
 
 };
@@ -819,8 +834,9 @@ class ScopeClass : public Scope{
     vector<ScopeFunc *> * funciones;
     ScopeClass * clasePadre;
     vector<ScopeClass *> * clasesHijas; 
-    bool tipoPrimitivo;
+    int tipoClase;  // Creada = 0, int = 1, double = 2, void = 3,string = 4, bool = 5
         public:
+        ScopeClass(int);
         ScopeClass(Scope *,ast_ClassDecl *);
         ast_ClassDecl * getClase();
         vector<ScopeVar *> * getVariables();
@@ -829,13 +845,17 @@ class ScopeClass : public Scope{
         bool analizarClase();
         bool identRepetido(string);
         ScopeClass * obtenerClase(string);
-        bool isTipoPrimitivo();
         bool existeMetodo(string);
         bool existeVariable(string);
         vector<ScopeClass *> * getClasesHijas();
         bool isClaseHija(ScopeClass *);
         ScopeFunc * obtenerFunc(string);
         bool existeIdent(string);
+        int getTipoClase();
+        ScopeVar * obtenerVar(string);
+        ScopeClass * obtenerAtributo(string);
+        ScopeFunc * obtenerMetodo(string);
+        string getNombreTipoClase();
         ~ScopeClass(){};
 };
 
@@ -851,6 +871,7 @@ class ScopeVar : public Scope{
         ScopeClass * obtenerClase(string);
         ScopeFunc * obtenerFunc(string);
         bool existeIdent(string);
+        ScopeVar * obtenerVar(string);
         ~ScopeVar(){};
 };
 
@@ -866,6 +887,7 @@ class ScopeStmtBlock : public Scope{
         ScopeClass * obtenerClase(string);
         ScopeFunc * obtenerFunc(string);
         bool existeIdent(string);
+        ScopeVar * obtenerVar(string);
         ~ScopeStmtBlock(){};
 };
 
