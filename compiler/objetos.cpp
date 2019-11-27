@@ -1467,7 +1467,7 @@ bool ast_CallExpr::analizarExpr(Scope * scope){
     linea << (this->linea);
     std::stringstream columna;
     columna << (this->columna);
-   
+
     if(tipoExpresion->getTipoClase() != 0){
         this->errores->push_back("Error: los tipos primitivos no tienen metodos en " + linea.str() + ":"+columna.str()) ;
         return false;
@@ -1476,7 +1476,23 @@ bool ast_CallExpr::analizarExpr(Scope * scope){
     {   
         bool termineBuscarMetodo = false;
         bool encontreMetodo = false;
-        if(!tipoExpresion->existeMetodo(this->ident)){
+        while(!termineBuscarMetodo){
+            if(tipoExpresion->existeMetodo(this->ident)){
+                encontreMetodo = true;
+                termineBuscarMetodo = true;
+            }
+            else{
+                if(tipoExpresion->getClasePadre() != NULL){
+                    tipoExpresion = tipoExpresion->getClasePadre();
+                }
+                else
+                {
+                    termineBuscarMetodo = true;
+                }
+                
+            }
+        }
+        if(!encontreMetodo){
          this->errores->push_back("Error: la clase "+tipoExpresion->getClase()->getIdent() + " no tiene un metodo "+ this->ident+" en " + linea.str() + ":"+columna.str()) ;
          return false;
         }

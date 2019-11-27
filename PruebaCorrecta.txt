@@ -4,30 +4,21 @@ class Zelda extends Princesa {
    string s;
    double d;
    Princesa Princesa;
+   Zelda z;
    
-   void llamarALink(int a){
-      
-      Print("Me cai");
+   int llamarALink(int camion){
+      z = NewArray(5,Zelda);
       h = 5;
       int b;
-      Zelda z;
-      if(b == 2){
-         int x;
-         x = 5;
-         Print ("Hola mundo");
-      }
-      else{
-        
-      }
-
-      while( h < 8){
-          h = 8;
-        int perro;
-        perro = "fiesta";
-      }
-   
-      return b;
+      Print("Hola",b,a);
+     return 5;
+     z.llamar();
+     z.llamarALink(15);
+     
    }
+   
+
+   
 }
 
 int h;
