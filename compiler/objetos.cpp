@@ -1474,9 +1474,10 @@ bool ast_CallExpr::analizarExpr(Scope * scope){
     }
     else
     {   
-        cout<<"Analizar metodo"<<endl;
+        bool termineBuscarMetodo = false;
+        bool encontreMetodo = false;
         if(!tipoExpresion->existeMetodo(this->ident)){
-         this->errores->push_back("Error: la clase "+tipoExpresion->getClase()->getIdent() + "no tiene un metodo"+ this->ident+" en " + linea.str() + ":"+columna.str()) ;
+         this->errores->push_back("Error: la clase "+tipoExpresion->getClase()->getIdent() + " no tiene un metodo "+ this->ident+" en " + linea.str() + ":"+columna.str()) ;
          return false;
         }
         ScopeFunc * funcion = tipoExpresion->obtenerFunc(ident);
@@ -2143,6 +2144,10 @@ vector<string> * ScopeFunc::getListaParametros(){
 
 ScopeClass::ScopeClass(int tipoClase):Scope(3,NULL){
     this->tipoClase = tipoClase;
+    this->clasePadre == NULL;
+    this-> variables = new std::vector<ScopeVar *>();
+    this->funciones = new std::vector<ScopeFunc *>();
+    this->clasesHijas = new vector<ScopeClass *>();
 }
 
 ScopeClass::ScopeClass(Scope * padre,ast_ClassDecl * clase): Scope(3,padre){
@@ -2151,6 +2156,7 @@ ScopeClass::ScopeClass(Scope * padre,ast_ClassDecl * clase): Scope(3,padre){
     this->funciones = new std::vector<ScopeFunc *>();
     this->tipoClase = 0;
     this->clasesHijas = new vector<ScopeClass *>();
+    this->clasePadre == NULL;
 }
 
 
@@ -2355,6 +2361,8 @@ bool ScopeClass::existeMetodo(string identMetodo){
             return true;
         }
     }
+    
+   
 
     return false;
 }

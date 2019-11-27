@@ -1,5 +1,23 @@
-class Hello {
- void main() {
- Print("Hello world\n);
- }
+class Rock{
+    string qualidades;
+    bool a;
+
+    int MatarRock(int b){
+        if(a==qualidades){
+            Print("Hola",b,d,z);
+        }
+    }
+
+}
+
+class MagoDeOz extends Pop{
+    int years;
+    Rock genero;
+    Reggueaton nope;
+    int MatarMago(){
+        return "Mejor no";
+    }
+    
+        
+    
 }
